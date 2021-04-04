@@ -17,25 +17,30 @@ class Room:
         """ 
             Метод расчета координаты комнаты при использовании дальномера
         """
+        Result=[]
         x=self.__x0
         y=alpha*x+B
         if (y>=self.__y0) and (y<=(self.__y0+self.__size)):
-            return x,y
+            Result.append([x,y])
 
         x=self.__x0+self.__size
         y=alpha*x+B
         if (y>=self.__y0) and (y<=(self.__y0+self.__size)):
-            return x,y
+            Result.append([x,y])
 
         y=self.__y0
         x=(y-B)/alpha
         if (x>=self.__x0) and (x<=(self.__x0+self.__size)):
-            return x,y
+            Result.append([x,y])
 
         y=self.__y0+self.__size
         x=(y-B)/alpha
         if (x>=self.__x0) and (x<=(self.__x0+self.__size)):
-            return x,y
+            Result.append([x,y])
+        
+        return Result
+
+
 
     
       

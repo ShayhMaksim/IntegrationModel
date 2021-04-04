@@ -20,7 +20,7 @@ class Wall:
     def item(self):
         return self.__item
 
-    def getRoomCoordinate(self,alpha,B):
+    def getWallCoordinate(self,alpha,B):
         y=(alpha*self.__B-self.__alpha*B)/(alpha-self.__alpha)
         x=(y-B)/alpha
 
@@ -38,8 +38,8 @@ class Wall:
             minY=self.__y1
             maxY=self.__y0
          
-        if x>=minX and x<=maxX and y>=minY and y<=maxY:
+        if (x>=minX and x<=maxX) and (y>=minY and y<=maxY):
             return x,y
 
-        
+        return -1,-1
         
