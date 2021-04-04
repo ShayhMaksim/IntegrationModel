@@ -103,7 +103,7 @@ class Model:
         alpha=tan(atan2((position[1]-self.__y),(position[0]-self.__x)))
         self.__wz=alpha
 
-
+        qrlist=[]
         while(True):
             
             b=self.__y-self.__wz*self.__x
@@ -182,7 +182,6 @@ class Model:
             c,dwz,newDt=self.Control(dt,resultD1,resultD2,resultD3)
 
 
-            qrlist=[]
             if self.__qr!=None:
                 #обзор камеры справа
                 _alpha90=tan(self.__wz+np.pi*30./180)
@@ -190,10 +189,14 @@ class Model:
             
                 _alpha_90=tan(self.__wz-np.pi*30./180)
                 _b_minus90=self.__y-_alpha_90*self.__x
+                Detected=[]
                 for qr in self.__qr:
                     x,y=qr.GetQrCoordinate(_alpha90,_b_90,_alpha_90,_b_minus90,self.__x,self.__y)
                     if (x!=-1) and (y!=-1):
-                        qrlist.append([x,y])
+                        dQr,angle=qr.GetLocalCoordinate(self.__x,self.__y)
+                        Detected.append([dQr,angle,t0])
+                if len(Detected)!=0:
+                    qrlist.append(Detected)
 
             self.Move(dt,c,dwz)
 
