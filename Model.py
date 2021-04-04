@@ -191,7 +191,7 @@ class Model:
                 _alpha_90=tan(self.__wz-np.pi*30./180)
                 _b_minus90=self.__y-_alpha_90*self.__x
                 for qr in self.__qr:
-                    x,y=qr.GetQrCoordinate(alpha90,b_90,_alpha90,_b_90,_alpha_90,_b_minus90,self.__x,self.__y)
+                    x,y=qr.GetQrCoordinate(_alpha90,_b_90,_alpha_90,_b_minus90,self.__x,self.__y)
                     if (x!=-1) and (y!=-1):
                         qrlist.append([x,y])
 

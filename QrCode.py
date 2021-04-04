@@ -24,8 +24,7 @@ class QrCode:
         return self.__item
 
 
-    def GetQrCoordinate(self,alpha,b,alphaK1,bK1,alphaK2,bK2,x,y):
-        # if (self.__y<self.__x*alpha+b):
+    def GetQrCoordinate(self,alphaK1,bK1,alphaK2,bK2,x,y):
         if (self.__y<alphaK1*self.__x+bK1) and (self.__y>alphaK2*self.__x+bK2):
             if (((x-self.__x)**2+(y-self.__y)**2)**0.5<200):              
                 self.__detected+=1
@@ -36,9 +35,4 @@ class QrCode:
                 if self.__detected>=10:
                     self.__item.setPen(QColor(255,255,0))    
                 return self.__x,self.__y
-        # else:
-        #     if (self.__y<alphaK1*self.__x+bK1) and (self.__y>alphaK2*self.__x+bK2):
-        #         if (((x-self.__x)**2+(y-self.__y)**2)**0.5<200):
-        #             self.__item.setPen(QColor(255,0,0))
-        #             return self.__x,self.__y
         return -1.,-1.
