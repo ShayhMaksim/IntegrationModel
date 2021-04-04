@@ -41,8 +41,8 @@ class QrCode:
 
     def GetLocalCoordinate(self,x,y):
         if abs(self.__w)==math.pi or abs(self.__w)==0:
-            x0=(x-self.__x)
-            y0=(y-self.__y)
+            x0=(x-self.__x)/math.cos(self.__w)
+            y0=(y-self.__y)/math.cos(self.__w)
             arg=math.atan2(y0,x0)
             d=(x0**2+y0**2)**0.5
             return d,arg
