@@ -50,21 +50,25 @@ class Model:
 
         currentT=0
         #если преграды нет, то движемся прямо к двери
-        if (d1>=20) and (d3>=20):
+        if (d1>=30) and (d3>=30):
             alpha=tan(atan2((position[1]-self.__y),(position[0]-self.__x)))
-            dwz=alpha-self.__wz
+            dwz1=alpha-self.__wz
+            if dwz1>self.dw*dt:
+                dwz=self.dw*dt
+            if dwz1<self.dw*dt:
+                dwz=-self.dw*dt
             currentT=dt
-            c=10
+            c=30
 
         #если преграды нет, то есть ограничения, то сохряняем угол траектории
-        if (d1>=20) and ((d2<=20) or (d3<=20)):
+        if (d1>=30) and ((d2<=30) or (d3<=30)):
             dwz=0
             currentT=dt
-            c=10
+            c=30
             
         #если справо свободно, то поворачиваем направо
         
-        if (d1<20) and (d3>20):
+        if (d1<30) and (d3>30):
             dwz=0
             #while (self.dw>self.dw*currentT):
             dwz+=self.dw*dt
@@ -73,7 +77,7 @@ class Model:
             c=0
              
         #если справо занято, и слево свободно, то налево
-        elif (d1<20) and (d3<20) and (d2>20):
+        elif (d1<30) and (d3<30) and (d2>30):
             dwz=0
             #while (self.dw>self.dw*currentT):
             dwz-=self.dw*dt
@@ -83,7 +87,7 @@ class Model:
 
 
         #если занято с обоих сторон, то поворачиваем направо
-        elif (d1<20) and (d3<20) and (d2<20) :
+        elif (d1<30) and (d3<30) and (d2<30) :
             dwz=0
             #while (self.dw>self.dw*currentT):
             dwz+=self.dw*dt
@@ -158,6 +162,7 @@ class Model:
                     rangefinder3.append(d)
 
             #главный дальномер
+            room=[]
             resultXY=self.__room.getRoomCoordinate(self.__wz,b)
             for xy in resultXY:
                 if alpha90>0:
@@ -166,13 +171,20 @@ class Model:
                         y=xy[1]
                         d=((x-self.__x)**2+(y-self.__y)**2)**0.5
                         rangefinder1.append(d)
-                elif alpha<=0:
+                        room.append(x)
+                        room.append(y)
+                        room.append(d)
+                elif alpha90<=0:
                     if (xy[1]>=(alpha90*xy[0]+b_90)):
                         x=xy[0]
                         y=xy[1]
                         d=((x-self.__x)**2+(y-self.__y)**2)**0.5
                         rangefinder1.append(d)
+                        room.append(x)
+                        room.append(y)
+                        room.append(d)
             resultD1=min(rangefinder1)
+
 
             #боковой справа
             resultXYL=self.__room.getRoomCoordinate(alpha90,b_90)
@@ -206,7 +218,7 @@ class Model:
                 _b_minus90=self.__y-_alpha_90*self.__x
                 Detected=[]
                 for qr in self.__qr:
-                    x,y=qr.GetQrCoordinate(_alpha90,_b_90,_alpha_90,_b_minus90,self.__x,self.__y)
+                    x,y=qr.GetQrCoordinate(np.pi*30./180,self.__x,self.__y,room[0],room[1],room[2])
                     if (x!=-1) and (y!=-1):
                         dQr,angle=qr.GetLocalCoordinate(self.__x,self.__y)
                         Detected.append([dQr,angle,t0])
@@ -216,7 +228,7 @@ class Model:
             self.Move(dt,c,dwz)
 
             t0=t0+newDt
-            if t0==100: break
+            if t0>=1000: break
 
-            if ((position[1]-self.__y)**2+(position[0]-self.__x)**2)**0.5<40:
+            if ((position[1]-self.__y)**2+(position[0]-self.__x)**2)**0.5<25:
                 break
