@@ -44,7 +44,7 @@ QrCode8=QrCode(400-50,400,-np.pi,scene)
 qrList=[QrCode1,QrCode2,QrCode3,QrCode4,QrCode5,QrCode6,QrCode7,QrCode8]
 model=Model(50,300,scene,room,door,walls)
 model.AddQrCode(qrList)
-model.Simulate(0.5)
+model.Simulate(0.1)
 
 graphicsView.show()
 

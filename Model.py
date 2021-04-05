@@ -66,26 +66,29 @@ class Model:
         
         if (d1<20) and (d3>20):
             dwz=0
-            while (self.dw>self.dw*currentT):
-                dwz+=self.dw*dt
-                currentT+=dt
+            #while (self.dw>self.dw*currentT):
+            dwz+=self.dw*dt
+                #currentT+=dt
+            currentT=dt
             c=0
              
         #если справо занято, и слево свободно, то налево
         elif (d1<20) and (d3<20) and (d2>20):
             dwz=0
-            while (self.dw>self.dw*currentT):
-                dwz-=self.dw*dt
-                currentT+=dt
+            #while (self.dw>self.dw*currentT):
+            dwz-=self.dw*dt
+            currentT=dt
+                #currentT+=dt
             c=0
 
 
         #если занято с обоих сторон, то поворачиваем направо
         elif (d1<20) and (d3<20) and (d2<20) :
             dwz=0
-            while (self.dw>self.dw*currentT):
-                dwz+=self.dw*dt
-                currentT+=dt
+            #while (self.dw>self.dw*currentT):
+            dwz+=self.dw*dt
+            currentT=dt
+                #currentT+=dt
             c=0
 
         return c,dwz,currentT
@@ -128,9 +131,14 @@ class Model:
                 x,y=wall.getWallCoordinate(self.__wz,b)
                 if (x==-1) and (y==-1): continue
 
-                if (y<(alpha90*x+b_90)):
-                    d=((x-self.__x)**2+(y-self.__y)**2)**0.5
-                    rangefinder1.append(d)
+                if alpha90>0:
+                    if (y<(alpha90*x+b_90)):
+                        d=((x-self.__x)**2+(y-self.__y)**2)**0.5
+                        rangefinder1.append(d)
+                elif alpha90<=0:
+                    if (y>(alpha90*x+b_90)):
+                        d=((x-self.__x)**2+(y-self.__y)**2)**0.5
+                        rangefinder1.append(d)
             
             for wall in self.__walls:
                 #дальномер, который сбоку
@@ -152,11 +160,18 @@ class Model:
             #главный дальномер
             resultXY=self.__room.getRoomCoordinate(self.__wz,b)
             for xy in resultXY:
-                if (xy[1]<(alpha90*xy[0]+b_90)):
-                    x=xy[0]
-                    y=xy[1]
-                    d=((x-self.__x)**2+(y-self.__y)**2)**0.5
-                    rangefinder1.append(d)
+                if alpha90>0:
+                    if (xy[1]<(alpha90*xy[0]+b_90)):
+                        x=xy[0]
+                        y=xy[1]
+                        d=((x-self.__x)**2+(y-self.__y)**2)**0.5
+                        rangefinder1.append(d)
+                elif alpha<=0:
+                    if (xy[1]>=(alpha90*xy[0]+b_90)):
+                        x=xy[0]
+                        y=xy[1]
+                        d=((x-self.__x)**2+(y-self.__y)**2)**0.5
+                        rangefinder1.append(d)
             resultD1=min(rangefinder1)
 
             #боковой справа
