@@ -34,30 +34,41 @@ class Model:
         self.dw=90.*np.pi/180.
 
         #под задачу фильтрации
-        self.__p_p=np.zeros((6,6))
-        self.__p_c=np.zeros((6,6))
-        self.__x_c=np.zeros(6)
-        self.__x_p=np.zeros(6)
+        self.__p_p=np.zeros((9,9))
+        self.__p_c=np.zeros((9,9))
+        self.__x_c=np.zeros(9)
+        self.__x_p=np.zeros(9)
         self.__cT=0.
 
         #ошибки измерений
         self.__Dn=np.asarray([
-            [1.,0,0,0,0,0],
-            [0,1.,0,0,0,0],
-            [0,0,0.01,0,0,0],
-            [0,0,0,1.,0,0],
-            [0,0,0,0,1.,0],
-            [0,0,0,0,0,1.],
+            [0.00000001,0,0.],
+            [0,0.00000001,0.],
+            [0,0,0.01],
         ])
 
-        self.__H=np.asarray([
-            [1.,0,0,0,0,0],
-            [0,1.,0,0,0,0],
-            [0,0,1.,0,0,0],
-            [0,0,0,1.,0,0],
-            [0,0,0,0,1.,0],
-            [0,0,0,0,0,1.]
+        self.__Dn2=np.asarray([
+            [0.00000001,0,0,0,0],
+            [0,0.00000001,0,0,0],
+            [0,0,0.01,0,0],
+            [0,0,0.,1.,0],
+            [0.,0.,0.,0.,1.]
         ])
+
+        #матрица наблюдения
+        self.__H=np.asarray([
+            [1.,0,0,0,0,0,0,0,0],
+            [0,1.,0,0,0,0,0,0,0],
+            [0,0,1.,0,0,0,0,0,0],
+        ])
+        self.__H2=np.asarray([
+            [1.,0,0,0,0,0,0,0,0],
+            [0,1.,0,0,0,0,0,0,0],
+            [0,0,1.,0,0,0,0,0,0],
+            [0,0,0.,0,0,1,0,0,0],
+            [0,0,0.,0,0,0,1,0,0],
+        ])
+
         self.Y=[]
         self.Result=[]
         self.RealData=[]
@@ -84,7 +95,7 @@ class Model:
 
         currentT=0
         #если преграды нет, то движемся прямо к двери
-        if (d1>=30) and (d3>=30):
+        if (d1>=30) and (d3>=30) and (d2>=30):
             alpha=tan(atan2((position[1]-__y),(position[0]-__x)))
             dwz1=alpha-__wz
             if dwz1>self.dw*dt:
@@ -141,10 +152,10 @@ class Model:
         """
             моделирование ситуации
 
-            модель ошибок БИНСа для координат - дисперсия линейно уходит с интенсивностью 1 cм^2/c\n
-            модель ошибок координат по Qr коду - 10 cм\n
+            модель ошибок БИНСа для координат - значения линейно уходит с k=3/c\n
+            модель ошибок координат по Qr коду - 9 cм\n
             модель ошибок угловых координат по БИНСу - дисперсия линейно растет с интесивностью 0.1 градус^2/c\n
-            модель ошибок угловых координат по Qr коду - 5 градусов
+            модель ошибок угловых координат по Qr коду - 3 градусов
         """
         t0=0
         position=self.__door.position
@@ -270,31 +281,40 @@ class Model:
             c,dwz,newDt=self.Control(dt,resultD1,resultD2,resultD3,self.__x,self.__y,self.__wz)
             self.Move(dt,c,dwz)
 
-            __x=0
-            __y=0
+
+            __qrx=0
+            __qry=0
             metka=""
-            if len(Detected)!=0 and (self.__cT>3):
+            if len(Detected)!=0:
                 for qr in Detected:
-                    __x+=qr[0]+random.normal(0,3)
-                    __y+=qr[1]+random.normal(0,3)
-                __x=__x/len(Detected)
-                __y=__y/len(Detected)
-                self.__cT=3
+                    __qrx+=qr[0]+random.normal(0,2)
+                    __qry+=qr[1]+random.normal(0,2)
+                __qrx=__qrx/len(Detected)
+                __qry=__qry/len(Detected)
                 metka="qr"
             else:
-                __x=self.__x+self.__cT*3
-                __y=self.__y+self.__cT*3
                 metka="bins"
-              
+
+            __x=self.__x+t0*3#+random.normal(0,0.01)
+            __y=self.__y+t0*3#+random.normal(0,0.01)
+                    
             __wz=self.__wz+random.normal(0,0.1)
             __d1=resultD1
             __d2=resultD2
             __d3=resultD3
 
-            self.RealData.append([t0,self.__x,self.__y,self.__wz,resultD1,resultD2,resultD3])
+            if metka=="qr":
+                currentY=np.asarray([__x,__y,__wz,__qrx,__qry])
+                Data=np.asarray([__d1,__d2,__d3])
+                self.Y.append([t0,metka,currentY,Data])
+            else:
+                currentY=np.asarray([__x,__y,__wz])
+                Data=np.asarray([__d1,__d2,__d3])
+                self.Y.append([t0,metka,currentY,Data])
+
+            self.RealData.append([t0,__x,__y,self.__wz,self.__x,self.__y,])
             
-            currentY=np.asarray([__x,__y,__wz,__d1,__d2,__d3])
-            self.Y.append([t0,metka,currentY])
+   
             
             t0=t0+newDt
             self.__cT+=newDt
@@ -304,14 +324,23 @@ class Model:
                 break
 
 
-    def Prediction(self,U,dt,metka):
+    def Prediction(self,U,dt,t):
+        if t==0:
+            t=dt
+
         F=np.asarray([
-            [1.,0.,0, 0., 0.,0.],
-            [0.,1.,0,0.,0.,0.],
-            [0.,0.,1.,0.,0.,0.],
-            [0.,0.,0.,1.,0.,0.],
-            [0.,0.,0.,0.,1.,0.],
-            [0.,0.,0.,0.,0.,1.]
+            [1.,0.,0, 0., 0.,0.,0, 0., 0.],
+            [0.,1.,0, 0.,0.,0.,0, 0., 0.],
+            [0.,0.,1.,0.,0.,0.,0, 0., 0.],
+            
+            [1.,0.,0.,0.,0.,0.,0, -t, 0.],
+            [0.,1.,0.,0.,0.,0.,0, 0., -t],
+            
+            [0.,0.,0.,0.,1.,0.,0, 0., 0],
+            [0.,0.,0.,0.,0.,1.,0, 0., 0],
+            
+            [1/(t/dt)/dt,0,0.,0.,1/(t/dt)/dt,0.,0, 0., 0],
+            [0.,1/(t/dt)/dt,0.,0.,0.,1/(t/dt)/dt,0, 0., 0],
         ],dtype=float)
 
         # V=np.asarray([
@@ -322,57 +351,69 @@ class Model:
         #     [0.,0,],
         #     [0.,0,],
         # ],dtype=float)
-        L=self.GetLambda(self.__cT,metka)
-        L_t=np.transpose(L)
 
-        De=np.dot(np.dot(L,self.__Dn),L_t)
-        
+        # L=self.GetLambda(self.__cT)
+        # L_t=np.transpose(L)
+        # De=np.dot(np.dot(L,self.__Dn),L_t)
+
+        De=np.asarray([
+            [0.0001,0,0,0,0,0,0,0,0],
+            [0,0.0001,0,0,0,0,0,0,0],
+            [0,0,0.01,0,0,0,0,0,0],
+            [0,0,0,1,0,0,0,0,0],
+            [0,0,0,0,1,0,0,0,0],
+            [0,0,0,0,0,1,0,0,0],
+            [0,0,0,0,0,0,1,0,0],
+            [0,0,0,0,0,0,0,0.01,0],
+            [0,0,0,0,0,0,0,0,0.01],
+        ])
+
         self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2]+U[1])*dt
         self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2]+U[1])*dt
         self.__x_p[2]=self.__x_c[2]+U[1]
-        self.__x_p[3]=self.__x_c[3]
-        self.__x_p[4]=self.__x_c[4]
-        self.__x_p[5]=self.__x_c[5]
+
+        self.__x_p[3]=self.__x_c[0]-self.__x_c[7]*t+U[0]*cos(self.__x_c[2]+U[1])*dt
+        self.__x_p[4]=self.__x_c[1]-self.__x_c[8]*t+U[0]*sin(self.__x_c[2]+U[1])*dt
+
+        self.__x_p[5]=self.__x_c[5]+U[0]*cos(self.__x_c[2]+U[1])*dt
+        self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2]+U[1])*dt
+
+        self.__x_p[7]=(self.__x_c[0]-self.__x_c[5])/(t/dt)/dt
+        self.__x_p[8]=(self.__x_c[1]-self.__x_c[6])/(t/dt)/dt
+
 
         self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
 
 
     def Correction(self,Y,metka):
-        L=self.GetLambda(self.__cT,metka)
-        L_t=np.transpose(L)
+        # L=self.GetLambda(self.__cT)
+        # L_t=np.transpose(L)
 
-        De=np.dot(np.dot(L,self.__Dn),L_t)
-        invDe=LA.inv(De)
-   
-        H_t=np.transpose(self.__H)
-        
-        self.__p_c=LA.inv(LA.inv(self.__p_p)+np.dot(np.dot(H_t,invDe),self.__H))
+        # De=np.dot(np.dot(L,self.__Dn),L_t)
+        if metka=="bins":
+            __H=self.__H
+            invDe=LA.inv(self.__Dn)
+            H_t=np.transpose(self.__H)
+        elif metka=="qr":
+            __H=self.__H2
+            invDe=LA.inv(self.__Dn2)
+            H_t=np.transpose(self.__H2)
+                  
+        self.__p_c=LA.inv(LA.inv(self.__p_p)+np.dot(np.dot(H_t,invDe),__H))
     
         mult=np.dot(np.dot(self.__p_c,H_t),invDe)
     
-        subl=Y-np.dot(self.__H,self.__x_p)
+        subl=Y-np.dot(__H,self.__x_p)
     
         self.__x_c=(self.__x_p+np.dot(mult,subl))
 
-    def GetLambda(self,coeff,metka):
-        if metka=="bins":
-            return np.asarray([
-            [(1+coeff)*1.35,0,0,0,0,0],
-            [0,(1+coeff)*1.35,0,0,0,0],
-            [0,0,1.,0,0,0],
-            [0,0,0,1.,0,0],
-            [0,0,0,0,1.,0],
-            [0,0,0,0,0,1.]
-            ])
-        elif metka=="qr":
-            return np.asarray([
-            [(1+coeff),0,0,0,0,0],
-            [0,(1+coeff),0,0,0,0],
-            [0,0,1.,0,0,0],
-            [0,0,0,1.,0,0],
-            [0,0,0,0,1.,0],
-            [0,0,0,0,0,1.]
-            ])
+    # def GetLambda(self,coeff):
+    #         return np.asarray([
+    #         [1,0,0],
+    #         [0,1,0],
+    #         [0,0,1.]
+    # ])
+
 
     def FilterKalman(self,dt):
         t0=0
@@ -380,51 +421,72 @@ class Model:
         alpha=tan(atan2((position[1]-self.__initY),(position[0]-self.__initX)))
         self.__wz=alpha
 
-        self.__x_p[0]=self.__initX
-        self.__x_p[1]=self.__initY
+        self.__x_p[0]=self.__initX+random.normal(0,3)
+        self.__x_p[1]=self.__initY+random.normal(0,3)
         self.__x_p[2]=self.__wz
-        self.__x_p[3]=200
-        self.__x_p[4]=100
-        self.__x_p[5]=100
+        self.__x_p[3]=self.__x_p[0]
+        self.__x_p[4]=self.__x_p[1]
+        self.__x_p[5]=self.__x_p[0]
+        self.__x_p[6]=self.__x_p[1]
+        self.__x_p[7]=0
+        self.__x_p[8]=0
+     
 
-        self.__p_p[0][0]=100
-        self.__p_p[1][1]=100
+        self.__p_p[0][0]=10
+        self.__p_p[1][1]=10
         self.__p_p[2][2]=1
-        self.__p_p[3][3]=100
-        self.__p_p[4][4]=100
-        self.__p_p[5][5]=100
-
+        self.__p_p[3][3]=10
+        self.__p_p[4][4]=10
+        self.__p_p[5][5]=10
+        self.__p_p[6][6]=10
+        self.__p_p[7][7]=10
+        self.__p_p[8][8]=10
+   
+        
         index=0
         self.__cT=0
+
+
         while(True):
 
             Data=self.Y[index]
 
-            if Data[1]=="qr":
-                self.__cT=3-1
+            # if Data[1]=="qr":
+            #     self.__cT=3-1
             
             y=Data[2]
-                       
-                        
-            #self.Correction(y)
-            #c,dwz,newDt=self.Control(dt,y[3],y[4],y[5],y[0],y[1],y[2])
-            
+            otherY=Data[3]           
+
             self.Correction(y,Data[1])
-            c,dwz,newDt=self.Control(dt,y[3],y[4],y[5],self.__x_c[0],self.__x_c[1],self.__x_c[2])
+            self.Result.append([Data[0],self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4]])
+            self.P.append([Data[0],self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4]])         
+
+            c,dwz,newDt=self.Control(dt,otherY[0],otherY[1],otherY[2],self.__x_c[3],self.__x_c[4],self.__x_c[2])
             U=np.asarray([c,dwz])
-            self.Prediction(U,newDt,Data[1])
-            self.Result.append([t0,self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4],self.__x_c[5]])
-            self.P.append([t0,self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4],self.__p_c[5][5]])
+            # if Data[1]=="qr":
+            #     n=(Data[0]/dt)
+            #     d1=(self.__x_c[0]-otherY[3])/(n-1)
+            #     d2=(self.__x_c[1]-otherY[4])/(n-1)
+
+            #     if k1==0:    
+            #         k1=d1/dt
+            #         k2=d2/dt
+            #     else:
+            #         k1=(k1+d1/dt)/2
+            #         k2=(k2+d2/dt)/2
+            #     coeff=8
+            # elif k1==0:
+            #     coeff=self.__cT*8
+            self.Prediction(U,newDt,Data[0])
             
             
-            t0=t0+newDt
+            
             self.__cT+=newDt
             index+=1
             
             if index>=len(self.Y): 
                 break
 
-            # if ((position[1]-self.__x_c[1])**2+(position[0]-self.__x_c[0])**2)**0.5<25:
-            #     break
+
       
 
