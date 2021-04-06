@@ -57,18 +57,18 @@ graphicsView.show()
 import matplotlib.pyplot as plt
 
 t=[]
-x=[]
+a=[]
 for j in model.RealData:
     t.append(j[0])
-    x.append(j[3])
+    a.append(j[3])
 
-xi=[]
+ai=[]
 for j in model.Y:
-    xi.append(j[2][2])
+    ai.append(j[2][2])
 
-xfk=[]
+afk=[]
 for j in model.Result:
-    xfk.append(j[3])
+    afk.append(j[3])
 
 plt.figure(figsize=(24,12))
 plt.rc('axes', labelsize=30)
@@ -79,9 +79,9 @@ plt.title("График Курса") # заголовок
 plt.xlabel("t, сек.") # ось абсцисс
 plt.ylabel("angle, мм.") # ось ординат
 plt.grid()      # включение отображение сетки
-plt.plot(t, x,'r',label="Реальное значение Курса")  # построение графика
-plt.plot(t, xfk,'b',label="Результат Курса - ФК")  # построение графика
-plt.plot(t, xi,'g',label="Результат измерения Курса - ФК")  # построение графика
+plt.plot(t, a,'r',label="Реальное значение Курса")  # построение графика
+plt.plot(t, afk,'b',label="Результат Курса - ФК")  # построение графика
+plt.plot(t, ai,'g',label="Результат измерения Курса - ФК")  # построение графика
 plt.legend(loc=0)
 plt.savefig('Эволюция компоненты Курса')
 
@@ -105,6 +105,14 @@ yfk=[]
 for j in model.Result:
     xfk.append(j[1])
     yfk.append(j[2])
+
+p_x=[]
+p_y=[]
+p_a=[]
+for p in model.P:
+    p_x.append(p[1])
+    p_y.append(p[2])
+    p_a.append(p[3])    
 
 plt.figure(figsize=(24,12))
 plt.rc('axes', labelsize=30)
@@ -135,5 +143,53 @@ plt.plot(t, xfk,'b',label="Результат - ФК")  # построение �
 plt.plot(t, xi,'g',label="Результат измерения- ФК")  # построение графика
 plt.legend(loc=0)
 plt.savefig('Траектория движения X')
+
+
+
+plt.figure(figsize=(24,12))
+plt.rc('axes', labelsize=30)
+plt.rc('axes',titlesize=30)
+plt.rc('legend', fontsize=30)
+plt.tick_params(axis='both', which='major', labelsize=16)
+plt.title("Корелляционная трубка X") # заголовок
+plt.xlabel("t, с.") # ось абсцисс
+plt.ylabel("x, см.") # ось ординат
+plt.grid()      # включение отображение сетки
+plt.plot(t, np.asarray(x)-np.asarray(xfk),'r',label="Ошибка")  # построение графика
+plt.plot(t, np.sqrt(p_x)*3,'b',label="Трубка сверху")  # построение графика
+plt.plot(t, -np.sqrt(np.asarray(p_x))*3,'b',label="Трубка снизу")  # построение графика
+plt.legend(loc=0)
+plt.savefig('Корелляционная трубка X')
+
+plt.figure(figsize=(24,12))
+plt.rc('axes', labelsize=30)
+plt.rc('axes',titlesize=30)
+plt.rc('legend', fontsize=30)
+plt.tick_params(axis='both', which='major', labelsize=16)
+plt.title("Корелляционная трубка Y") # заголовок
+plt.xlabel("t, с.") # ось абсцисс
+plt.ylabel("y, см.") # ось ординат
+plt.grid()      # включение отображение сетки
+plt.plot(t, np.asarray(y)-np.asarray(yfk),'r',label="Ошибка")  # построение графика
+plt.plot(t, np.sqrt(p_y)*3,'b',label="Трубка сверху")  # построение графика
+plt.plot(t, -np.sqrt(np.asarray(p_y))*3,'b',label="Трубка снизу")  # построение графика
+plt.legend(loc=0)
+plt.savefig('Корелляционная трубка Y')
+
+
+plt.figure(figsize=(24,12))
+plt.rc('axes', labelsize=30)
+plt.rc('axes',titlesize=30)
+plt.rc('legend', fontsize=30)
+plt.tick_params(axis='both', which='major', labelsize=16)
+plt.title("Корелляционная трубка Alpha") # заголовок
+plt.xlabel("t, с.") # ось абсцисс
+plt.ylabel("alpha, градусов.") # ось ординат
+plt.grid()      # включение отображение сетки
+plt.plot(t, np.asarray(a)-np.asarray(afk),'r',label="Ошибка")  # построение графика
+plt.plot(t, np.sqrt(p_a)*3,'b',label="Трубка сверху")  # построение графика
+plt.plot(t, -np.sqrt(np.asarray(p_a))*3,'b',label="Трубка снизу")  # построение графика
+plt.legend(loc=0)
+plt.savefig('Корелляционная трубка Alpha')
 
 sys.exit(app.exec())

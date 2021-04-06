@@ -61,6 +61,7 @@ class Model:
         self.Y=[]
         self.Result=[]
         self.RealData=[]
+        self.P=[]
         
     
     def DrawTrajectory(self,oldX,oldY,newX,newY):
@@ -83,50 +84,50 @@ class Model:
 
         currentT=0
         #если преграды нет, то движемся прямо к двери
-        # if (d1>=30) and (d3>=30):
-        alpha=tan(atan2((position[1]-__y),(position[0]-__x)))
-        dwz1=alpha-__wz
-        if dwz1>self.dw*dt:
-            dwz=self.dw*dt
-        if dwz1<self.dw*dt:
-            dwz=-self.dw*dt
-        currentT=dt
-        c=30
+        if (d1>=30) and (d3>=30):
+            alpha=tan(atan2((position[1]-__y),(position[0]-__x)))
+            dwz1=alpha-__wz
+            if dwz1>self.dw*dt:
+                dwz=self.dw*dt
+            if dwz1<self.dw*dt:
+                dwz=-self.dw*dt
+            currentT=dt
+            c=30
 
         #если преграды нет, то есть ограничения, то сохряняем угол траектории
-        # if (d1>=30) and ((d2<=30) or (d3<=30)):
-        #     dwz=0
-        #     currentT=dt
-        #     c=30
+        if (d1>=30) and ((d2<=30) or (d3<=30)):
+            dwz=0
+            currentT=dt
+            c=30
             
-        # #если справо свободно, то поворачиваем направо
+        #если справо свободно, то поворачиваем направо
         
-        # if (d1<30) and (d3>30):
-        #     dwz=0
-        #     #while (self.dw>self.dw*currentT):
-        #     dwz+=self.dw*dt
-        #         #currentT+=dt
-        #     currentT=dt
-        #     c=0
+        if (d1<30) and (d3>30):
+            dwz=0
+            #while (self.dw>self.dw*currentT):
+            dwz+=self.dw*dt
+                #currentT+=dt
+            currentT=dt
+            c=0
              
-        # #если справо занято, и слево свободно, то налево
-        # elif (d1<30) and (d3<30) and (d2>30):
-        #     dwz=0
-        #     #while (self.dw>self.dw*currentT):
-        #     dwz-=self.dw*dt
-        #     currentT=dt
-        #         #currentT+=dt
-        #     c=0
+        #если справо занято, и слево свободно, то налево
+        elif (d1<30) and (d3<30) and (d2>30):
+            dwz=0
+            #while (self.dw>self.dw*currentT):
+            dwz-=self.dw*dt
+            currentT=dt
+                #currentT+=dt
+            c=0
 
 
         #если занято с обоих сторон, то поворачиваем направо
-        # elif (d1<30) and (d3<30) and (d2<30) :
-        #     dwz=0
-        #     #while (self.dw>self.dw*currentT):
-        #     dwz+=self.dw*dt
-        #     currentT=dt
-        #         #currentT+=dt
-        #     c=0
+        elif (d1<30) and (d3<30) and (d2<30) :
+            dwz=0
+            #while (self.dw>self.dw*currentT):
+            dwz+=self.dw*dt
+            currentT=dt
+                #currentT+=dt
+            c=0
 
         return c,dwz,currentT
 
@@ -272,23 +273,23 @@ class Model:
             __x=0
             __y=0
             metka=""
-            if len(Detected)!=0 and (self.__cT<10**0.5):
+            if len(Detected)!=0 and (self.__cT>3):
                 for qr in Detected:
-                    __x+=qr[0]+random.normal(0,10**0.5)
-                    __y+=qr[1]+random.normal(0,10**0.5)
+                    __x+=qr[0]+random.normal(0,3)
+                    __y+=qr[1]+random.normal(0,3)
                 __x=__x/len(Detected)
                 __y=__y/len(Detected)
-                self.__cT=10**0.5-1
+                self.__cT=3
                 metka="qr"
             else:
-                __x=self.__x+self.__cT*random.normal(0,1)
-                __y=self.__y+self.__cT*random.normal(0,1)
+                __x=self.__x+self.__cT*3
+                __y=self.__y+self.__cT*3
                 metka="bins"
               
             __wz=self.__wz+random.normal(0,0.1)
-            __d1=resultD1+random.normal(0,1)
-            __d2=resultD2+random.normal(0,1)
-            __d3=resultD3+random.normal(0,1)
+            __d1=resultD1
+            __d2=resultD2
+            __d3=resultD3
 
             self.RealData.append([t0,self.__x,self.__y,self.__wz,resultD1,resultD2,resultD3])
             
@@ -303,7 +304,7 @@ class Model:
                 break
 
 
-    def Prediction(self,U,dt):
+    def Prediction(self,U,dt,metka):
         F=np.asarray([
             [1.,0.,0, 0., 0.,0.],
             [0.,1.,0,0.,0.,0.],
@@ -321,7 +322,10 @@ class Model:
         #     [0.,0,],
         #     [0.,0,],
         # ],dtype=float)
+        L=self.GetLambda(self.__cT,metka)
+        L_t=np.transpose(L)
 
+        De=np.dot(np.dot(L,self.__Dn),L_t)
         
         self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2]+U[1])*dt
         self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2]+U[1])*dt
@@ -330,11 +334,11 @@ class Model:
         self.__x_p[4]=self.__x_c[4]
         self.__x_p[5]=self.__x_c[5]
 
-        self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))
+        self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
 
 
-    def Correction(self,Y):
-        L=self.GetLambda(self.__cT)
+    def Correction(self,Y,metka):
+        L=self.GetLambda(self.__cT,metka)
         L_t=np.transpose(L)
 
         De=np.dot(np.dot(L,self.__Dn),L_t)
@@ -350,15 +354,25 @@ class Model:
     
         self.__x_c=(self.__x_p+np.dot(mult,subl))
 
-    def GetLambda(self,coeff):
-        return np.asarray([
-            [coeff+1,0,0,0,0,0],
-            [0,coeff+1,0,0,0,0],
+    def GetLambda(self,coeff,metka):
+        if metka=="bins":
+            return np.asarray([
+            [(1+coeff)*1.35,0,0,0,0,0],
+            [0,(1+coeff)*1.35,0,0,0,0],
             [0,0,1.,0,0,0],
             [0,0,0,1.,0,0],
             [0,0,0,0,1.,0],
             [0,0,0,0,0,1.]
-        ])
+            ])
+        elif metka=="qr":
+            return np.asarray([
+            [(1+coeff),0,0,0,0,0],
+            [0,(1+coeff),0,0,0,0],
+            [0,0,1.,0,0,0],
+            [0,0,0,1.,0,0],
+            [0,0,0,0,1.,0],
+            [0,0,0,0,0,1.]
+            ])
 
     def FilterKalman(self,dt):
         t0=0
@@ -373,12 +387,12 @@ class Model:
         self.__x_p[4]=100
         self.__x_p[5]=100
 
-        self.__p_p[0][0]=10
-        self.__p_p[1][1]=10
-        self.__p_p[2][2]=0.1
-        self.__p_p[3][3]=10
-        self.__p_p[4][4]=10
-        self.__p_p[5][5]=10
+        self.__p_p[0][0]=100
+        self.__p_p[1][1]=100
+        self.__p_p[2][2]=1
+        self.__p_p[3][3]=100
+        self.__p_p[4][4]=100
+        self.__p_p[5][5]=100
 
         index=0
         self.__cT=0
@@ -386,22 +400,22 @@ class Model:
 
             Data=self.Y[index]
 
-            # if Data[1]=="qr":
-            #     self.__cT=10**0.5-1
+            if Data[1]=="qr":
+                self.__cT=3-1
             
             y=Data[2]
                        
-            
-            
+                        
             #self.Correction(y)
             #c,dwz,newDt=self.Control(dt,y[3],y[4],y[5],y[0],y[1],y[2])
             
-            self.Correction(y)
-            c,dwz,newDt=self.Control(dt,self.__x_c[3],self.__x_c[4],self.__x_c[5],self.__x_c[0],self.__x_c[1],self.__x_c[2])
+            self.Correction(y,Data[1])
+            c,dwz,newDt=self.Control(dt,y[3],y[4],y[5],self.__x_c[0],self.__x_c[1],self.__x_c[2])
             U=np.asarray([c,dwz])
-            self.Prediction(U,newDt)
+            self.Prediction(U,newDt,Data[1])
             self.Result.append([t0,self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4],self.__x_c[5]])
-            #self.Move(dt,c,dwz)
+            self.P.append([t0,self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4],self.__p_c[5][5]])
+            
             
             t0=t0+newDt
             self.__cT+=newDt
