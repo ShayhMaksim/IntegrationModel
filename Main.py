@@ -91,12 +91,16 @@ x=[]
 y=[]
 rx=[]
 ry=[]
+kx=[]
+ky=[]
 for j in model.RealData:
     t.append(j[0])
     x.append(j[1])
     y.append(j[2])
     rx.append(j[4])
     ry.append(j[5])
+    kx.append(3)
+    ky.append(3)
 
 xi=[]
 yi=[]
@@ -110,11 +114,15 @@ xfk=[]
 yfk=[]
 rxfk=[]
 ryfk=[]
+kxfk=[]
+kyfk=[]
 for j in model.Result:
     xfk.append(j[1])
     yfk.append(j[2])
     rxfk.append(j[4])
     ryfk.append(j[5])
+    kxfk.append(j[8])
+    kyfk.append(j[9])
 
 p_x=[]
 p_y=[]
@@ -237,5 +245,36 @@ plt.plot(t, np.sqrt(p_ry)*3,'b',label="Трубка сверху")  # постр
 plt.plot(t, -np.sqrt(np.asarray(p_ry))*3,'b',label="Трубка снизу")  # построение графика
 plt.legend(loc=0)
 plt.savefig('Корелляционная трубка положения робота Y')
+
+
+plt.figure(figsize=(24,12))
+plt.rc('axes', labelsize=30)
+plt.rc('axes',titlesize=30)
+plt.rc('legend', fontsize=30)
+plt.tick_params(axis='both', which='major', labelsize=16)
+plt.title("График эволюции K1") # заголовок
+plt.xlabel("t, с.") # ось абсцисс
+plt.ylabel("k1") # ось ординат
+plt.grid()      # включение отображение сетки
+plt.plot(t, kx,'r',label="Реальное значение K1")  # построение графика
+plt.plot(t, kxfk,'b',label="Результат - ФК")  # построение графика
+#plt.plot(t, yi,'g',label="Результат измерения- ФК")  # построение графика
+plt.legend(loc=0)
+plt.savefig('K1')
+
+plt.figure(figsize=(24,12))
+plt.rc('axes', labelsize=30)
+plt.rc('axes',titlesize=30)
+plt.rc('legend', fontsize=30)
+plt.tick_params(axis='both', which='major', labelsize=16)
+plt.title("График эволюции K2") # заголовок
+plt.xlabel("t, с.") # ось абсцисс
+plt.ylabel("k2") # ось ординат
+plt.grid()      # включение отображение сетки
+plt.plot(t, ky,'r',label="Реальное значение K2")  # построение графика
+plt.plot(t, kyfk,'b',label="Результат - ФК")  # построение графика
+#plt.plot(t, yi,'g',label="Результат измерения- ФК")  # построение графика
+plt.legend(loc=0)
+plt.savefig('K2')
 
 sys.exit(app.exec())
