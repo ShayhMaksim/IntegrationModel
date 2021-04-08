@@ -219,15 +219,15 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("Корелляционная трубка Alpha") # заголовок
+plt.title("Корелляционная трубка Курса") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
-plt.ylabel("alpha, градусов.") # ось ординат
+plt.ylabel("Wz, градусов.") # ось ординат
 plt.grid()      # включение отображение сетки
 plt.plot(t, np.asarray(a)-np.asarray(afk),'r',label="Ошибка")  # построение графика
 plt.plot(t, np.sqrt(p_a)*3,'b',label="Трубка сверху")  # построение графика
 plt.plot(t, -np.sqrt(np.asarray(p_a))*3,'b',label="Трубка снизу")  # построение графика
 plt.legend(loc=0)
-plt.savefig('Корелляционная трубка Alpha')
+plt.savefig('Корелляционная трубка Курса')
 
 
 plt.figure(figsize=(24,12))

@@ -134,13 +134,13 @@ class Model:
 
 
         #если занято с обоих сторон, то поворачиваем направо
-        # elif (d1<30) and (d3<30) and (d2<30) :
-        #     dwz=0
-        #     #while (self.dw>self.dw*currentT):
-        #     dwz+=self.dw*dt
-        #     currentT=dt
-        #         #currentT+=dt
-        #     c=0
+        elif (d1<30) and (d3<30) and (d2<30) :
+            dwz=0
+            #while (self.dw>self.dw*currentT):
+            dwz+=self.dw*dt
+            currentT=dt
+                #currentT+=dt
+            c=0
 
         return c,dwz,currentT
 
@@ -284,18 +284,18 @@ class Model:
             metka=""
             if len(Detected)!=0:
                 for qr in Detected:
-                    __qrx+=qr[0]+random.normal(0,3)
-                    __qry+=qr[1]+random.normal(0,3)
+                    __qrx+=qr[0]+np.random.normal(0,3)
+                    __qry+=qr[1]+np.random.normal(0,3)
                 __qrx=__qrx/len(Detected)
                 __qry=__qry/len(Detected)
                 metka="qr"
             else:
                 metka="bins"
 
-            __x=self.__x+t0*10+random.normal(0,0.1)
-            __y=self.__y+t0*10+random.normal(0,0.1)
+            __x=self.__x+t0*10+np.random.normal(0,0.1)
+            __y=self.__y+t0*10+np.random.normal(0,0.1)
                     
-            __wz=self.__wz+random.normal(0,0.07)
+            __wz=self.__wz+np.random.normal(0,0.07)
             __d1=resultD1
             __d2=resultD2
             __d3=resultD3
@@ -334,14 +334,14 @@ class Model:
                 [0.,0.,0.,0.,1.,0.,0, 0., 0],
                 [0.,0.,0.,0.,0.,1.,0, 0., 0],
 
-                [0.5/(t/dt)/dt,0,0.,0.,-0.5/(t/dt)/dt,0.,0, 0.5, 0],
-                [0.,0.5/(t/dt)/dt,0.,0.,0.,-0.5/(t/dt)/dt,0, 0., 0.5],
+                [0.5/t,0,0.,0.,-0.5/t,0.,0, 0.5, 0],
+                [0.,0.5/t,0.,0.,0.,-0.5/t,0, 0., 0.5],
                 ],dtype=float)
 
     
         De=np.asarray([
-            [dt,0,0,0,0,0,0,0,0],
-            [0,dt,0,0,0,0,0,0,0],
+            [0.3,0,0,0,0,0,0,0,0],
+            [0,0.3,0,0,0,0,0,0,0],
             [0,0,(0.5*np.pi*dt)**2,0,0,0,0,0,0],
             [0,0,0,(15*dt)**2,0,0,0,0,0],
             [0,0,0,0,(15*dt)**2,0,0,0,0],
@@ -350,7 +350,7 @@ class Model:
             [0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
         ])
-
+ 
         self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2]+U[1])*dt
         self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2]+U[1])*dt
         self.__x_p[2]=self.__x_c[2]+U[1]
@@ -362,8 +362,8 @@ class Model:
         self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2]+U[1])*dt
 
         
-        self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])/(t/dt)/dt)/2.
-        self.__x_p[8]=(self.__x_c[8]+(self.__x_c[1]-self.__x_c[6])/(t/dt)/dt)/2.
+        self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])/t)/2.
+        self.__x_p[8]=(self.__x_c[8]+(self.__x_c[1]-self.__x_c[6])/t)/2.
 
 
 
@@ -408,15 +408,15 @@ class Model:
         self.__x_p[8]=0
      
 
-        self.__p_p[0][0]=9
-        self.__p_p[1][1]=9
+        self.__p_p[0][0]=1
+        self.__p_p[1][1]=1
         self.__p_p[2][2]=1
-        self.__p_p[3][3]=9
-        self.__p_p[4][4]=9
-        self.__p_p[5][5]=9
-        self.__p_p[6][6]=9
-        self.__p_p[7][7]=9
-        self.__p_p[8][8]=9
+        self.__p_p[3][3]=1
+        self.__p_p[4][4]=1
+        self.__p_p[5][5]=1
+        self.__p_p[6][6]=1
+        self.__p_p[7][7]=50
+        self.__p_p[8][8]=50
    
         
         index=0
