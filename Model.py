@@ -42,17 +42,17 @@ class Model:
 
         #ошибки измерений
         self.__Dn=np.asarray([
-            [0.00000001,0,0.],
-            [0,0.00000001,0.],
+            [0.0001,0,0.],
+            [0,0.0001,0.],
             [0,0,0.01],
         ])
 
         self.__Dn2=np.asarray([
-            [0.00000001,0,0,0,0],
-            [0,0.00000001,0,0,0],
+            [0.0001,0,0,0,0],
+            [0,0.0001,0,0,0],
             [0,0,0.01,0,0],
-            [0,0,0.,1.,0],
-            [0.,0.,0.,0.,1.]
+            [0,0,0.,9.,0],
+            [0.,0.,0.,0.,9.]
         ])
 
         #матрица наблюдения
@@ -88,6 +88,8 @@ class Model:
         
     def AddQrCode(self,qrCode:List[QrCode]):
         self.__qr=qrCode
+
+    
 
     def Control(self,dt,d1,d2,d3,__x,__y,__wz):
         """Управляющие элементы"""
@@ -295,8 +297,8 @@ class Model:
             else:
                 metka="bins"
 
-            __x=self.__x+t0*3#+random.normal(0,0.01)
-            __y=self.__y+t0*3#+random.normal(0,0.01)
+            __x=self.__x+t0*10+random.normal(0,0.01)
+            __y=self.__y+t0*10+random.normal(0,0.01)
                     
             __wz=self.__wz+random.normal(0,0.1)
             __d1=resultD1
@@ -324,7 +326,7 @@ class Model:
                 break
 
 
-    def Prediction(self,U,dt,t):
+    def Prediction(self,U,dt,t,metka):
         if t>dt:
             F=np.asarray([
                 [1.,0.,0, 0., 0.,0.,0, 0., 0.],
@@ -337,8 +339,8 @@ class Model:
                 [0.,0.,0.,0.,1.,0.,0, 0., 0],
                 [0.,0.,0.,0.,0.,1.,0, 0., 0],
 
-                [1/(t/dt)/dt,0,0.,0.,-1/(t/dt)/dt,0.,0, 0., 0],
-                [0.,1/(t/dt)/dt,0.,0.,0.,-1/(t/dt)/dt,0, 0., 0],
+                [0.5/(t/dt)/dt,0,0.,0.,-0.5/(t/dt)/dt,0.,0, 0.5, 0],
+                [0.,0.5/(t/dt)/dt,0.,0.,0.,-0.5/(t/dt)/dt,0, 0., 0.5],
                 ],dtype=float)
         else:
             F=np.asarray([
@@ -352,23 +354,35 @@ class Model:
                 [0.,0.,0.,0.,1.,0.,0, 0., 0],
                 [0.,0.,0.,0.,0.,1.,0, 0., 0],
 
-                [dt,0,0.,0.,-dt,0.,0, 0., 0],
-                [0.,dt,0.,0.,0.,-dt,0, 0., 0],
+                [dt*0.5,0,0.,0.,-dt*0.5,0.,0, 0.5, 0],
+                [0.,dt*0.5,0.,0.,0.,-dt*0.5,0, 0., 0.5],
                 ],dtype=float)
 
 
-
+      
         De=np.asarray([
-            [0.0001,0,0,0,0,0,0,0,0],
-            [0,0.0001,0,0,0,0,0,0,0],
-            [0,0,0.01,0,0,0,0,0,0],
+            [dt,0,0,0,0,0,0,0,0],
+            [0,dt,0,0,0,0,0,0,0],
+            [0,0,dt*dt,0,0,0,0,0,0],
+            [0,0,0,9*dt,0,0,0,0,0],
+            [0,0,0,0,9*dt,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,3,0,0,0],
-            [0,0,0,0,0,0,3,0,0],
-            [0,0,0,0,0,0,0,0.01,0],
-            [0,0,0,0,0,0,0,0,0.01],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
         ])
+        # else:
+        #     De=np.asarray([
+        #     [dt,0,0,0,0,0,0,0,0],
+        #     [0,dt,0,0,0,0,0,0,0],
+        #     [0,0,dt*dt,0,0,0,0,0,0],
+        #     [0,0,0,9*dt,0,0,0,0,0],
+        #     [0,0,0,0,9*dt,0,0,0,0],
+        #     [0,0,0,0,0,0,0,0,0],
+        #     [0,0,0,0,0,0,0,0,0],
+        #     [0,0,0,0,0,0,0,0,0],
+        #     [0,0,0,0,0,0,0,0,0],
+        #     ])
 
         self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2]+U[1])*dt
         self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2]+U[1])*dt
@@ -381,21 +395,18 @@ class Model:
         self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2]+U[1])*dt
 
         if t>dt:
-            self.__x_p[7]=(self.__x_c[0]-self.__x_c[5])/(t/dt)/dt
-            self.__x_p[8]=(self.__x_c[1]-self.__x_c[6])/(t/dt)/dt
+            self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])/(t/dt)/dt)/2.
+            self.__x_p[8]=(self.__x_c[8]+(self.__x_c[1]-self.__x_c[6])/(t/dt)/dt)/2.
         else:
-            self.__x_p[7]=(self.__x_c[0]-self.__x_c[5])*dt
-            self.__x_p[8]=(self.__x_c[1]-self.__x_c[6])*dt
+            self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])*dt)/2
+            self.__x_p[8]=(self.__x_c[8]+(self.__x_c[1]-self.__x_c[6])*dt)/2
 
 
         self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
 
 
     def Correction(self,Y,metka):
-        # L=self.GetLambda(self.__cT)
-        # L_t=np.transpose(L)
 
-        # De=np.dot(np.dot(L,self.__Dn),L_t)
         if metka=="bins":
             __H=self.__H
             invDe=LA.inv(self.__Dn)
@@ -413,12 +424,6 @@ class Model:
     
         self.__x_c=(self.__x_p+np.dot(mult,subl))
 
-    # def GetLambda(self,coeff):
-    #         return np.asarray([
-    #         [1,0,0],
-    #         [0,1,0],
-    #         [0,0,1.]
-    # ])
 
 
     def FilterKalman(self,dt):
@@ -427,8 +432,8 @@ class Model:
         alpha=tan(atan2((position[1]-self.__initY),(position[0]-self.__initX)))
         self.__wz=alpha
 
-        self.__x_p[0]=self.__initX-3
-        self.__x_p[1]=self.__initY-3
+        self.__x_p[0]=self.__initX
+        self.__x_p[1]=self.__initY
         self.__x_p[2]=self.__wz
         self.__x_p[3]=self.__x_p[0]
         self.__x_p[4]=self.__x_p[1]
@@ -483,7 +488,7 @@ class Model:
             #     coeff=8
             # elif k1==0:
             #     coeff=self.__cT*8
-            self.Prediction(U,newDt,Data[0])
+            self.Prediction(U,newDt,Data[0],Data[1])
             
             
             
