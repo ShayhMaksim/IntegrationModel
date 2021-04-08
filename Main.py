@@ -252,7 +252,7 @@ plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
 plt.title("Корелляционная трубка положения робота Y") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
-plt.ylabel("x, см.") # ось ординат
+plt.ylabel("y, см.") # ось ординат
 plt.grid()      # включение отображение сетки
 plt.plot(t, np.asarray(ry)-np.asarray(ryfk),'r',label="Ошибка")  # построение графика
 plt.plot(t, np.sqrt(p_ry)*3,'b',label="Трубка сверху")  # построение графика
