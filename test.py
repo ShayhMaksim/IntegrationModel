@@ -39,4 +39,7 @@ scene.addEllipse(-10,400-10-50,20,20)
 scene.addEllipse(400-10,400-10-50,20,20)
 scene.addEllipse(400-10-50,400-10,20,20)
 
+print((0.07*180/np.pi)*(0.07*180/np.pi))
+
+print((0.15*180/np.pi))
 sys.exit(app.exec())

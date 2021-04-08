@@ -42,15 +42,15 @@ class Model:
 
         #ошибки измерений
         self.__Dn=np.asarray([
-            [0.0001,0,0.],
-            [0,0.0001,0.],
-            [0,0,0.01],
+            [0.01,0,0.],
+            [0,0.01,0.],
+            [0,0,0.0049],
         ])
 
         self.__Dn2=np.asarray([
-            [0.0001,0,0,0,0],
-            [0,0.0001,0,0,0],
-            [0,0,0.01,0,0],
+            [0.01,0,0,0,0],
+            [0,0.01,0,0,0],
+            [0,0,0.0049,0,0],
             [0,0,0.,9.,0],
             [0.,0.,0.,0.,9.]
         ])
@@ -98,7 +98,7 @@ class Model:
         currentT=0
         #если преграды нет, то движемся прямо к двери
         if (d1>=30) and (d3>=30) and (d2>=30):
-            alpha=tan(atan2((position[1]-__y),(position[0]-__x)))
+            alpha=atan2((position[1]-__y),(position[0]-__x))
             dwz1=alpha-__wz
             if dwz1>self.dw*dt:
                 dwz=self.dw*dt
@@ -108,7 +108,7 @@ class Model:
             c=30
 
         #если преграды нет, то есть ограничения, то сохряняем угол траектории
-        if (d1>=30) and ((d2<=30) or (d3<=30)):
+        if (d1>30) and ((d2<30) or (d3<30)):
             dwz=0
             currentT=dt
             c=30
@@ -134,21 +134,16 @@ class Model:
 
 
         #если занято с обоих сторон, то поворачиваем направо
-        elif (d1<30) and (d3<30) and (d2<30) :
-            dwz=0
-            #while (self.dw>self.dw*currentT):
-            dwz+=self.dw*dt
-            currentT=dt
-                #currentT+=dt
-            c=0
+        # elif (d1<30) and (d3<30) and (d2<30) :
+        #     dwz=0
+        #     #while (self.dw>self.dw*currentT):
+        #     dwz+=self.dw*dt
+        #     currentT=dt
+        #         #currentT+=dt
+        #     c=0
 
         return c,dwz,currentT
 
-    def BeginEnd(self,x0,x1):
-        if x0<=x1:
-            return x0,x1
-        if x0>=x1:
-            return x1,x0
 
     def Simulate(self,dt):
         """
@@ -161,7 +156,7 @@ class Model:
         """
         t0=0
         position=self.__door.position
-        alpha=tan(atan2((position[1]-self.__y),(position[0]-self.__x)))
+        alpha=atan2((position[1]-self.__y),(position[0]-self.__x))
         self.__wz=alpha
 
         qrlist=[]
@@ -289,18 +284,18 @@ class Model:
             metka=""
             if len(Detected)!=0:
                 for qr in Detected:
-                    __qrx+=qr[0]+random.normal(0,2)
-                    __qry+=qr[1]+random.normal(0,2)
+                    __qrx+=qr[0]+random.normal(0,3)
+                    __qry+=qr[1]+random.normal(0,3)
                 __qrx=__qrx/len(Detected)
                 __qry=__qry/len(Detected)
                 metka="qr"
             else:
                 metka="bins"
 
-            __x=self.__x+t0*10+random.normal(0,0.01)
-            __y=self.__y+t0*10+random.normal(0,0.01)
+            __x=self.__x+t0*10+random.normal(0,0.1)
+            __y=self.__y+t0*10+random.normal(0,0.1)
                     
-            __wz=self.__wz+random.normal(0,0.1)
+            __wz=self.__wz+random.normal(0,0.07)
             __d1=resultD1
             __d2=resultD2
             __d3=resultD3
@@ -322,13 +317,13 @@ class Model:
             self.__cT+=newDt
             if t0>=10000: break
 
-            if ((position[1]-self.__y)**2+(position[0]-self.__x)**2)**0.5<25:
+            if abs(((position[1]-self.__y)**2+(position[0]-self.__x)**2)**0.5)<=20:
                 break
 
 
     def Prediction(self,U,dt,t,metka):
-        if t>dt:
-            F=np.asarray([
+
+        F=np.asarray([
                 [1.,0.,0, 0., 0.,0.,0, 0., 0.],
                 [0.,1.,0, 0.,0.,0.,0, 0., 0.],
                 [0.,0.,1.,0.,0.,0.,0, 0., 0.],
@@ -342,47 +337,19 @@ class Model:
                 [0.5/(t/dt)/dt,0,0.,0.,-0.5/(t/dt)/dt,0.,0, 0.5, 0],
                 [0.,0.5/(t/dt)/dt,0.,0.,0.,-0.5/(t/dt)/dt,0, 0., 0.5],
                 ],dtype=float)
-        else:
-            F=np.asarray([
-                [1.,0.,0, 0., 0.,0.,0, 0., 0.],
-                [0.,1.,0, 0.,0.,0.,0, 0., 0.],
-                [0.,0.,1.,0.,0.,0.,0, 0., 0.],
-            
-                [1.,0.,0.,0.,0.,0.,0, -t, 0.],
-                [0.,1.,0.,0.,0.,0.,0, 0., -t],
-            
-                [0.,0.,0.,0.,1.,0.,0, 0., 0],
-                [0.,0.,0.,0.,0.,1.,0, 0., 0],
 
-                [dt*0.5,0,0.,0.,-dt*0.5,0.,0, 0.5, 0],
-                [0.,dt*0.5,0.,0.,0.,-dt*0.5,0, 0., 0.5],
-                ],dtype=float)
-
-
-      
+    
         De=np.asarray([
             [dt,0,0,0,0,0,0,0,0],
             [0,dt,0,0,0,0,0,0,0],
-            [0,0,dt*dt,0,0,0,0,0,0],
-            [0,0,0,9*dt,0,0,0,0,0],
-            [0,0,0,0,9*dt,0,0,0,0],
+            [0,0,(0.5*np.pi*dt)**2,0,0,0,0,0,0],
+            [0,0,0,(15*dt)**2,0,0,0,0,0],
+            [0,0,0,0,(15*dt)**2,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
         ])
-        # else:
-        #     De=np.asarray([
-        #     [dt,0,0,0,0,0,0,0,0],
-        #     [0,dt,0,0,0,0,0,0,0],
-        #     [0,0,dt*dt,0,0,0,0,0,0],
-        #     [0,0,0,9*dt,0,0,0,0,0],
-        #     [0,0,0,0,9*dt,0,0,0,0],
-        #     [0,0,0,0,0,0,0,0,0],
-        #     [0,0,0,0,0,0,0,0,0],
-        #     [0,0,0,0,0,0,0,0,0],
-        #     [0,0,0,0,0,0,0,0,0],
-        #     ])
 
         self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2]+U[1])*dt
         self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2]+U[1])*dt
@@ -394,12 +361,10 @@ class Model:
         self.__x_p[5]=self.__x_c[5]+U[0]*cos(self.__x_c[2]+U[1])*dt
         self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2]+U[1])*dt
 
-        if t>dt:
-            self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])/(t/dt)/dt)/2.
-            self.__x_p[8]=(self.__x_c[8]+(self.__x_c[1]-self.__x_c[6])/(t/dt)/dt)/2.
-        else:
-            self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])*dt)/2
-            self.__x_p[8]=(self.__x_c[8]+(self.__x_c[1]-self.__x_c[6])*dt)/2
+        
+        self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])/(t/dt)/dt)/2.
+        self.__x_p[8]=(self.__x_c[8]+(self.__x_c[1]-self.__x_c[6])/(t/dt)/dt)/2.
+
 
 
         self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
@@ -429,7 +394,7 @@ class Model:
     def FilterKalman(self,dt):
         t0=0
         position=self.__door.position
-        alpha=tan(atan2((position[1]-self.__initY),(position[0]-self.__initX)))
+        alpha=atan2((position[1]-self.__initY),(position[0]-self.__initX))
         self.__wz=alpha
 
         self.__x_p[0]=self.__initX
@@ -443,15 +408,15 @@ class Model:
         self.__x_p[8]=0
      
 
-        self.__p_p[0][0]=10
-        self.__p_p[1][1]=10
+        self.__p_p[0][0]=9
+        self.__p_p[1][1]=9
         self.__p_p[2][2]=1
-        self.__p_p[3][3]=10
-        self.__p_p[4][4]=10
-        self.__p_p[5][5]=10
-        self.__p_p[6][6]=10
-        self.__p_p[7][7]=20
-        self.__p_p[8][8]=20
+        self.__p_p[3][3]=9
+        self.__p_p[4][4]=9
+        self.__p_p[5][5]=9
+        self.__p_p[6][6]=9
+        self.__p_p[7][7]=9
+        self.__p_p[8][8]=9
    
         
         index=0
@@ -462,9 +427,6 @@ class Model:
 
             Data=self.Y[index]
 
-            # if Data[1]=="qr":
-            #     self.__cT=3-1
-            
             y=Data[2]
             otherY=Data[3]           
 
@@ -474,21 +436,7 @@ class Model:
 
             c,dwz,newDt=self.Control(dt,otherY[0],otherY[1],otherY[2],self.__x_c[3],self.__x_c[4],self.__x_c[2])
             U=np.asarray([c,dwz])
-            # if Data[1]=="qr":
-            #     n=(Data[0]/dt)
-            #     d1=(self.__x_c[0]-otherY[3])/(n-1)
-            #     d2=(self.__x_c[1]-otherY[4])/(n-1)
-
-            #     if k1==0:    
-            #         k1=d1/dt
-            #         k2=d2/dt
-            #     else:
-            #         k1=(k1+d1/dt)/2
-            #         k2=(k2+d2/dt)/2
-            #     coeff=8
-            # elif k1==0:
-            #     coeff=self.__cT*8
-            self.Prediction(U,newDt,Data[0],Data[1])
+            self.Prediction(U,newDt,Data[0]+dt,Data[1])
             
             
             
