@@ -18,7 +18,7 @@ class Model:
         Мера измерения - 1 см - 1 пиксель\n
         Дальномер не имеет ограничений на измерения (2 дальномера)
     """
-    def __init__(self,x0,y0,scene:QGraphicsScene,room: Room,door:Door,walls:List[Wall]):
+    def __init__(self,x0,y0,scene:QGraphicsScene,room: Room,door:Door):
         self.__item=scene.addEllipse(x0-10,y0-10,20,20,QPen(QColor(100,100,100)),QBrush(QColor(255,50,50)))
         self.__scene=scene
         self.__initX=x0
@@ -27,7 +27,7 @@ class Model:
         self.__y=y0
         self.__wz=0
         self.__door=door
-        self.__walls=walls
+        self.__walls=None
         self.__room=room
         self.__qr=None
 
@@ -88,6 +88,9 @@ class Model:
         
     def AddQrCode(self,qrCode:List[QrCode]):
         self.__qr=qrCode
+
+    def AddWalls(self,walls:List[Wall]):
+        self.__walls=walls
 
     
 
@@ -184,36 +187,38 @@ class Model:
             #решающее правило для дальномеров
             alphaR=tan(self.__wz)
             bR=self.__y-alphaR*self.__x
-            for wall in self.__walls:
+
+            if self.__walls!=None:
+                for wall in self.__walls:
                 #дальномер, который спереди
-                x,y=wall.getWallCoordinate(self.__wz,b)
-                if (x==-1) and (y==-1): continue
+                    x,y=wall.getWallCoordinate(self.__wz,b)
+                    if (x==-1) and (y==-1): continue
 
-                if alpha90>0:
-                    if (y<(alpha90*x+b_90)):
-                        d=((x-self.__x)**2+(y-self.__y)**2)**0.5
-                        rangefinder1.append(d)
-                elif alpha90<=0:
-                    if (y>(alpha90*x+b_90)):
-                        d=((x-self.__x)**2+(y-self.__y)**2)**0.5
-                        rangefinder1.append(d)
+                    if alpha90>0:
+                        if (y<(alpha90*x+b_90)):
+                            d=((x-self.__x)**2+(y-self.__y)**2)**0.5
+                            rangefinder1.append(d)
+                    elif alpha90<=0:
+                        if (y>(alpha90*x+b_90)):
+                            d=((x-self.__x)**2+(y-self.__y)**2)**0.5
+                            rangefinder1.append(d)
             
-            for wall in self.__walls:
+                for wall in self.__walls:
                 #дальномер, который сбоку
-                x,y=wall.getWallCoordinate(alpha90,b_90)
-                if (x==-1) and (y==-1): continue       
-                if ((alphaR*x+bR)>=y):
-                    d=((x-self.__x)**2+(y-self.__y)**2)**0.5
-                    rangefinder2.append(d)
+                    x,y=wall.getWallCoordinate(alpha90,b_90)
+                    if (x==-1) and (y==-1): continue       
+                    if ((alphaR*x+bR)>=y):
+                        d=((x-self.__x)**2+(y-self.__y)**2)**0.5
+                        rangefinder2.append(d)
 
             
-            for wall in self.__walls:
+                for wall in self.__walls:
                 #дальномер, который сбоку
-                x,y=wall.getWallCoordinate(alpha_90,b_minus90)
-                if (x==-1) and (y==-1): continue
-                if ((alphaR*x+bR)<y):
-                    d=((x-self.__x)**2+(y-self.__y)**2)**0.5
-                    rangefinder3.append(d)
+                    x,y=wall.getWallCoordinate(alpha_90,b_minus90)
+                    if (x==-1) and (y==-1): continue
+                    if ((alphaR*x+bR)<y):
+                        d=((x-self.__x)**2+(y-self.__y)**2)**0.5
+                        rangefinder3.append(d)
 
             #главный дальномер
             room=[]
@@ -236,7 +241,7 @@ class Model:
                         rangefinder1.append(d)
                         room.append(x)
                         room.append(y)
-                        room.append(d)
+                        room.append(d)         
             resultD1=min(rangefinder1)
 
 
@@ -258,7 +263,9 @@ class Model:
                     y=xy[1]
                     d=((x-self.__x)**2+(y-self.__y)**2)**0.5
                     rangefinder3.append(d)
+            if len(rangefinder3)==0: break   
             resultD3=min(rangefinder3)
+            
 
             Detected=[]
             if self.__qr!=None:
@@ -317,7 +324,7 @@ class Model:
             self.__cT+=newDt
             if t0>=10000: break
 
-            if abs(((position[1]-self.__y)**2+(position[0]-self.__x)**2)**0.5)<=20:
+            if abs(((position[1]-self.__y)**2+(position[0]-self.__x)**2)**0.5)<=30:
                 break
 
 
@@ -340,8 +347,8 @@ class Model:
 
     
         De=np.asarray([
-            [0.3,0,0,0,0,0,0,0,0],
-            [0,0.3,0,0,0,0,0,0,0],
+            [0.15,0,0,0,0,0,0,0,0],
+            [0,0.15,0,0,0,0,0,0,0],
             [0,0,(0.5*np.pi*dt)**2,0,0,0,0,0,0],
             [0,0,0,(15*dt)**2,0,0,0,0,0],
             [0,0,0,0,(15*dt)**2,0,0,0,0],
