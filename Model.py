@@ -357,6 +357,7 @@ class Model:
             [0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
         ])
+
  
         self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2]+U[1])*dt
         self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2]+U[1])*dt
@@ -415,13 +416,13 @@ class Model:
         self.__x_p[8]=0
      
 
-        self.__p_p[0][0]=1
-        self.__p_p[1][1]=1
+        self.__p_p[0][0]=5
+        self.__p_p[1][1]=5
         self.__p_p[2][2]=1
-        self.__p_p[3][3]=1
-        self.__p_p[4][4]=1
-        self.__p_p[5][5]=1
-        self.__p_p[6][6]=1
+        self.__p_p[3][3]=5
+        self.__p_p[4][4]=5
+        self.__p_p[5][5]=5
+        self.__p_p[6][6]=5
         self.__p_p[7][7]=50
         self.__p_p[8][8]=50
    

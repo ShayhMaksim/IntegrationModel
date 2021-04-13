@@ -76,13 +76,13 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("График Курса") # заголовок
+plt.title("График эволюции угла курса") # заголовок
 plt.xlabel("t, сек.") # ось абсцисс
-plt.ylabel("angle, мм.") # ось ординат
+plt.ylabel("Угол курса, рад.") # ось ординат
 plt.grid()      # включение отображение сетки
-plt.plot(t, a,'r',label="Реальное значение Курса")  # построение графика
-plt.plot(t, afk,'b',label="Результат Курса - ФК")  # построение графика
-plt.plot(t, ai,'g',label="Результат измерения Курса - ФК")  # построение графика
+plt.plot(t, a,'r',label="Реальное значение угла курса")  # построение графика
+plt.plot(t, afk,'b',label="Значение угла курса - ФК")  # построение графика
+plt.plot(t, ai,'g',label="Измерение угла курса")  # построение графика
 plt.legend(loc=0)
 plt.savefig('Эволюция компоненты Курса')
 
@@ -155,7 +155,7 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("График эволюции по Y") # заголовок
+plt.title("График эволюции Y") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
 plt.ylabel("y, см.") # ось ординат
 plt.grid()      # включение отображение сетки
@@ -171,7 +171,7 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("График эволюции по X") # заголовок
+plt.title("График эволюции X") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
 plt.ylabel("x, см.") # ось ординат
 plt.grid()      # включение отображение сетки
@@ -189,7 +189,7 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("Корелляционная трубка X") # заголовок
+plt.title("Корелляционная трубка для компоненты X") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
 plt.ylabel("x, см.") # ось ординат
 plt.grid()      # включение отображение сетки
@@ -204,7 +204,7 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("Корелляционная трубка Y") # заголовок
+plt.title("Корелляционная трубка для компоненты Y") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
 plt.ylabel("y, см.") # ось ординат
 plt.grid()      # включение отображение сетки
@@ -220,15 +220,15 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("Корелляционная трубка Курса") # заголовок
+plt.title("Корелляционная трубка для угла курса") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
-plt.ylabel("Wz, градусов.") # ось ординат
+plt.ylabel("Угол курса, рад.") # ось ординат
 plt.grid()      # включение отображение сетки
 plt.plot(t, np.asarray(a)-np.asarray(afk),'r',label="Ошибка")  # построение графика
 plt.plot(t, np.sqrt(p_a)*3,'b',label="Трубка сверху")  # построение графика
 plt.plot(t, -np.sqrt(np.asarray(p_a))*3,'b',label="Трубка снизу")  # построение графика
 plt.legend(loc=0)
-plt.savefig('Корелляционная трубка Курса')
+plt.savefig('Корелляционная трубка угла курса')
 
 
 plt.figure(figsize=(24,12))
@@ -236,7 +236,7 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("Корелляционная трубка положения робота X") # заголовок
+plt.title("Корелляционная трубка для компоненты X") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
 plt.ylabel("x, см.") # ось ординат
 plt.grid()      # включение отображение сетки
@@ -251,7 +251,7 @@ plt.rc('axes', labelsize=30)
 plt.rc('axes',titlesize=30)
 plt.rc('legend', fontsize=30)
 plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("Корелляционная трубка положения робота Y") # заголовок
+plt.title("Корелляционная трубка для компоненты Y") # заголовок
 plt.xlabel("t, с.") # ось абсцисс
 plt.ylabel("y, см.") # ось ординат
 plt.grid()      # включение отображение сетки
@@ -272,7 +272,7 @@ plt.xlabel("t, с.") # ось абсцисс
 plt.ylabel("k1") # ось ординат
 plt.grid()      # включение отображение сетки
 plt.plot(t, kx,'r',label="Реальное значение K1")  # построение графика
-plt.plot(t, kxfk,'b',label="Результат - ФК")  # построение графика
+plt.plot(t, kxfk,'b',label="Результат K1 - ФК")  # построение графика
 #plt.plot(t, yi,'g',label="Результат измерения- ФК")  # построение графика
 plt.legend(loc=0)
 plt.savefig('K1')
@@ -287,7 +287,7 @@ plt.xlabel("t, с.") # ось абсцисс
 plt.ylabel("k2") # ось ординат
 plt.grid()      # включение отображение сетки
 plt.plot(t, ky,'r',label="Реальное значение K2")  # построение графика
-plt.plot(t, kyfk,'b',label="Результат - ФК")  # построение графика
+plt.plot(t, kyfk,'b',label="Значение K2 - ФК")  # построение графика
 #plt.plot(t, yi,'g',label="Результат измерения- ФК")  # построение графика
 plt.legend(loc=0)
 plt.savefig('K2')
