@@ -47,13 +47,13 @@ class Model:
             [0,0,0.0049],
         ])
 
-        self.__Dn2=np.asarray([
-            [0.01,0,0,0,0],
-            [0,0.01,0,0,0],
-            [0,0,0.0049,0,0],
-            [0,0,0.,9.,0],
-            [0.,0.,0.,0.,9.]
-        ])
+        # self.__Dn2=np.asarray([
+        #     [0.01,0,0,0,0],
+        #     [0,0.01,0,0,0],
+        #     [0,0,0.0049,0,0],
+        #     [0,0,0.,9.,0],
+        #     [0.,0.,0.,0.,9.]
+        # ])
 
         #матрица наблюдения
         self.__H=np.asarray([
@@ -279,7 +279,7 @@ class Model:
                     x,y=qr.GetQrCoordinate(np.pi*30./180,self.__x,self.__y,room[0],room[1],room[2])
                     if (x!=-1) and (y!=-1):
                         dQr,angle=qr.GetLocalCoordinate(self.__x,self.__y)
-                        Detected.append([self.__x,self.__y])
+                        Detected.append([self.__x,self.__y,dQr])
 
   
             c,dwz,newDt=self.Control(dt,resultD1,resultD2,resultD3,self.__x,self.__y,self.__wz)
@@ -291,8 +291,8 @@ class Model:
             metka=""
             if len(Detected)!=0:
                 for qr in Detected:
-                    __qrx+=qr[0]+np.random.normal(0,3)
-                    __qry+=qr[1]+np.random.normal(0,3)
+                    __qrx+=qr[0]+np.random.normal(0,(dQr**(0.5)))
+                    __qry+=qr[1]+np.random.normal(0,(dQr**(0.5)))
                 __qrx=__qrx/len(Detected)
                 __qry=__qry/len(Detected)
                 metka="qr"
@@ -309,17 +309,16 @@ class Model:
 
             if metka=="qr":
                 currentY=np.asarray([__x,__y,__wz,__qrx,__qry])
-                Data=np.asarray([__d1,__d2,__d3])
+                Data=np.asarray([__d1,__d2,__d3,dQr])
                 self.Y.append([t0,metka,currentY,Data])
             else:
                 currentY=np.asarray([__x,__y,__wz])
-                Data=np.asarray([__d1,__d2,__d3])
+                Data=np.asarray([__d1,__d2,__d3,0])
                 self.Y.append([t0,metka,currentY,Data])
 
             self.RealData.append([t0,__x,__y,self.__wz,self.__x,self.__y,])
             
-   
-            
+             
             t0=t0+newDt
             self.__cT+=newDt
             if t0>=10000: break
@@ -350,8 +349,8 @@ class Model:
             [0.15,0,0,0,0,0,0,0,0],
             [0,0.15,0,0,0,0,0,0,0],
             [0,0,(0.5*np.pi*dt)**2,0,0,0,0,0,0],
-            [0,0,0,(15*dt)**2,0,0,0,0,0],
-            [0,0,0,0,(15*dt)**2,0,0,0,0],
+            [0,0,0,(10*dt)**2,0,0,0,0,0],
+            [0,0,0,0,(10*dt)**2,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0],
@@ -378,13 +377,21 @@ class Model:
         self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
 
 
-    def Correction(self,Y,metka):
+    def Correction(self,Y,metka,dQr):
+
 
         if metka=="bins":
             __H=self.__H
             invDe=LA.inv(self.__Dn)
             H_t=np.transpose(self.__H)
         elif metka=="qr":
+            self.__Dn2=np.asarray([
+            [0.01,0,0,0,0],
+            [0,0.01,0,0,0],
+            [0,0,0.0049,0,0],
+            [0,0,0.,(dQr),0],
+            [0.,0.,0.,0.,(dQr)]
+            ])
             __H=self.__H2
             invDe=LA.inv(self.__Dn2)
             H_t=np.transpose(self.__H2)
@@ -438,7 +445,7 @@ class Model:
             y=Data[2]
             otherY=Data[3]           
 
-            self.Correction(y,Data[1])
+            self.Correction(y,Data[1],otherY[3])
             self.Result.append([Data[0],self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4],self.__x_c[5],self.__x_c[6],self.__x_c[7],self.__x_c[8]])
             self.P.append([Data[0],self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4],self.__p_c[5][5],self.__p_c[6][6],self.__p_c[7][7],self.__p_c[8][8]])         
 
