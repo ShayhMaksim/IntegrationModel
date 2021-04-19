@@ -81,8 +81,8 @@ class Model:
     def Move(self,dt,c,dwz):
         oldX=self.__x
         oldY=self.__y
-        self.__x=self.__x+c*cos(self.__wz+dwz)*dt
-        self.__y=self.__y+c*sin(self.__wz+dwz)*dt
+        self.__x=self.__x+c*cos(self.__wz)*dt
+        self.__y=self.__y+c*sin(self.__wz)*dt
         self.__wz=self.__wz+dwz
         self.DrawTrajectory(oldX,oldY,self.__x,self.__y)
         
@@ -278,8 +278,18 @@ class Model:
                 for qr in self.__qr:
                     x,y=qr.GetQrCoordinate(np.pi*30./180,self.__x,self.__y,room[0],room[1],room[2])
                     if (x!=-1) and (y!=-1):
-                        dQr,angle=qr.GetLocalCoordinate(self.__x,self.__y)
-                        Detected.append([self.__x,self.__y,dQr])
+                        dQr,angle,qrw=qr.GetLocalCoordinate(self.__x,self.__y)
+                        print(abs(cos(angle)/sin(angle)))
+                        dX=np.random.normal(0,abs(cos(angle)/sin(angle))*(2**(dQr**(1./3)))**0.5)
+                        dY=np.random.normal(0,abs(cos(angle)/sin(angle))*(2**(dQr**(1./3)))**0.5)
+                        __X=(dQr*cos(angle)+dX)*cos(qrw)+(dQr*sin(angle)+dY)*sin(qrw)+x
+                        __Y=-(dQr*cos(angle)+dX)*sin(qrw)+(dQr*sin(angle)+dY)*cos(qrw)+y
+
+                
+                        # if (round(__X,3)==round(self.__x,3)) and (round(__Y,3)==round(self.__y,3)): 
+                        #     print("YES!")
+
+                        Detected.append([__X,__Y,dQr,angle])
 
   
             c,dwz,newDt=self.Control(dt,resultD1,resultD2,resultD3,self.__x,self.__y,self.__wz)
@@ -290,11 +300,6 @@ class Model:
             __qry=0
             metka=""
             if len(Detected)!=0:
-                for qr in Detected:
-                    __qrx+=qr[0]+np.random.normal(0,(dQr**(0.5)))
-                    __qry+=qr[1]+np.random.normal(0,(dQr**(0.5)))
-                __qrx=__qrx/len(Detected)
-                __qry=__qry/len(Detected)
                 metka="qr"
             else:
                 metka="bins"
@@ -308,8 +313,8 @@ class Model:
             __d3=resultD3
 
             if metka=="qr":
-                currentY=np.asarray([__x,__y,__wz,__qrx,__qry])
-                Data=np.asarray([__d1,__d2,__d3,dQr])
+                currentY=np.asarray([__x,__y,__wz])
+                Data=np.asarray([__d1,__d2,__d3,Detected])                  
                 self.Y.append([t0,metka,currentY,Data])
             else:
                 currentY=np.asarray([__x,__y,__wz])
@@ -358,15 +363,15 @@ class Model:
         ])
 
  
-        self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2]+U[1])*dt
-        self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2]+U[1])*dt
+        self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2])*dt
+        self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2])*dt
         self.__x_p[2]=self.__x_c[2]+U[1]
 
-        self.__x_p[3]=self.__x_c[0]-self.__x_c[7]*t+U[0]*cos(self.__x_c[2]+U[1])*dt
-        self.__x_p[4]=self.__x_c[1]-self.__x_c[8]*t+U[0]*sin(self.__x_c[2]+U[1])*dt
+        self.__x_p[3]=self.__x_c[0]-self.__x_c[7]*t+U[0]*cos(self.__x_c[2])*dt
+        self.__x_p[4]=self.__x_c[1]-self.__x_c[8]*t+U[0]*sin(self.__x_c[2])*dt
 
-        self.__x_p[5]=self.__x_c[5]+U[0]*cos(self.__x_c[2]+U[1])*dt
-        self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2]+U[1])*dt
+        self.__x_p[5]=self.__x_c[5]+U[0]*cos(self.__x_c[2])*dt
+        self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2])*dt
 
         
         self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])/t)/2.
@@ -377,7 +382,7 @@ class Model:
         self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
 
 
-    def Correction(self,Y,metka,dQr):
+    def Correction(self,Y,metka,D):
 
 
         if metka=="bins":
@@ -389,8 +394,8 @@ class Model:
             [0.01,0,0,0,0],
             [0,0.01,0,0,0],
             [0,0,0.0049,0,0],
-            [0,0,0.,(dQr),0],
-            [0.,0.,0.,0.,(dQr)]
+            [0,0,0.,D,0],
+            [0.,0.,0.,0.,D]
             ])
             __H=self.__H2
             invDe=LA.inv(self.__Dn2)
@@ -444,8 +449,28 @@ class Model:
 
             y=Data[2]
             otherY=Data[3]           
+            D_=0
+            if otherY[3]!=0:
+                __qrx=0
+                __qry=0
+                D=[]
+                if len(otherY[3])!=0:
+                    for qr in otherY[3]:
+                        __qrx+=qr[0]
+                        __qry+=qr[1]
+                        d_=(qr[0]**2+qr[1]**2)**0.5
+                        al_=atan2(qr[1],qr[0])
+                        an=cos(al_)**2/sin(al_)**2
+                        D_l=an*(2**(d_**(1./3)))
+                        D.append(D_l)
+                    __qrx=__qrx/len(otherY[3])
+                    __qry=__qry/len(otherY[3])
+                    y=np.resize(y,5)
+                    y[3]=(__qrx)
+                    y[4]=(__qry)
+                    D_=min(D)
 
-            self.Correction(y,Data[1],otherY[3])
+            self.Correction(y,Data[1],D_)
             self.Result.append([Data[0],self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4],self.__x_c[5],self.__x_c[6],self.__x_c[7],self.__x_c[8]])
             self.P.append([Data[0],self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4],self.__p_c[5][5],self.__p_c[6][6],self.__p_c[7][7],self.__p_c[8][8]])         
 

@@ -30,8 +30,8 @@ wall4=Wall(100,150,200,230,scene)
 
 wall6=Wall(260,150,300,250,scene)
 
-#door=Door(400,100,scene)
-door=Door(400,250,scene)
+door=Door(400,100,scene)
+#door=Door(400,250,scene)
 
 walls=[wall1,wall2,wall3,wall4,wall6]
 
@@ -48,8 +48,8 @@ QrCode7=QrCode(400,400-50,-np.pi*0.5,scene)
 QrCode8=QrCode(400-50,400,-np.pi,scene)
 
 qrList=[QrCode1,QrCode2,QrCode3,QrCode4,QrCode5,QrCode6,QrCode7,QrCode8]
-#model=Model(50,300,scene,room,door)
-model=Model(50,100,scene,room,door)
+model=Model(50,300,scene,room,door)
+#model=Model(50,100,scene,room,door)
 model.AddQrCode(qrList)
 model.AddWalls(walls)
 model.Simulate(0.1)
