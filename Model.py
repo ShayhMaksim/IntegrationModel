@@ -34,10 +34,10 @@ class Model:
         self.dw=90.*np.pi/180.
 
         #под задачу фильтрации
-        self.__p_p=np.zeros((9,9))
-        self.__p_c=np.zeros((9,9))
-        self.__x_c=np.zeros(9)
-        self.__x_p=np.zeros(9)
+        self.__p_p=np.zeros((7,7))
+        self.__p_c=np.zeros((7,7))
+        self.__x_c=np.zeros(7)
+        self.__x_p=np.zeros(7)
         self.__cT=0.
 
         #ошибки измерений
@@ -57,16 +57,16 @@ class Model:
 
         #матрица наблюдения
         self.__H=np.asarray([
-            [1.,0,0,0,0,0,0,0,0],
-            [0,1.,0,0,0,0,0,0,0],
-            [0,0,1.,0,0,0,0,0,0],
+            [1.,0,0,0,0,0,0],
+            [0,1.,0,0,0,0,0],
+            [0,0,1.,0,0,0,0],
         ])
         self.__H2=np.asarray([
-            [1.,0,0,0,0,0,0,0,0],
-            [0,1.,0,0,0,0,0,0,0],
-            [0,0,1.,0,0,0,0,0,0],
-            [0,0,0.,0,0,1,0,0,0],
-            [0,0,0.,0,0,0,1,0,0],
+            [1.,0,0,0,0,0,0],
+            [0,1.,0,0,0,0,0],
+            [0,0,1.,0,0,0,0],
+            [0,0,0.,1,0,0,0],
+            [0,0,0.,0,1,0,0],
         ])
 
         self.Y=[]
@@ -304,8 +304,8 @@ class Model:
             else:
                 metka="bins"
 
-            __x=self.__x+t0*10+np.random.normal(0,0.1)
-            __y=self.__y+t0*10+np.random.normal(0,0.1)
+            __x=self.__x+(t0*10)+np.random.normal(0,0.1)
+            __y=self.__y+(t0*10)+np.random.normal(0,0.1)
                     
             __wz=self.__wz+np.random.normal(0,0.07)
             __d1=resultD1
@@ -335,31 +335,26 @@ class Model:
     def Prediction(self,U,dt,t,metka):
 
         F=np.asarray([
-                [1.,0.,0, 0., 0.,0.,0, 0., 0.],
-                [0.,1.,0, 0.,0.,0.,0, 0., 0.],
-                [0.,0.,1.,0.,0.,0.,0, 0., 0.],
+                [1.,0.,0, 0., 0.,0.,0],
+                [0.,1.,0, 0.,0.,0.,0],
+                [0.,0.,1.,0.,0.,0.,0],
             
-                [1.,0.,0.,0.,0.,0.,0, -t, 0.],
-                [0.,1.,0.,0.,0.,0.,0, 0., -t],
+                [1.,0.,0.,0.,0., -t, 0.],
+                [0.,1.,0.,0.,0.,0., -t],
             
-                [0.,0.,0.,0.,1.,0.,0, 0., 0],
-                [0.,0.,0.,0.,0.,1.,0, 0., 0],
-
-                [0.5/t,0,0.,0.,-0.5/t,0.,0, 0.5, 0],
-                [0.,0.5/t,0.,0.,0.,-0.5/t,0, 0., 0.5],
+                [0.5/t,0,0,-0.5/t,0., 0.5, 0],
+                [0.,0.5/t,0.,0,-0.5/t, 0., 0.5],
                 ],dtype=float)
 
     
         De=np.asarray([
-            [0.15,0,0,0,0,0,0,0,0],
-            [0,0.15,0,0,0,0,0,0,0],
-            [0,0,(0.5*np.pi*dt)**2,0,0,0,0,0,0],
-            [0,0,0,(10*dt)**2,0,0,0,0,0],
-            [0,0,0,0,(10*dt)**2,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0],
+            [(15*dt)**2,0,0,0,0,0,0],
+            [0,(15*dt)**2,0,0,0,0,0],
+            [0,0,(0.5*np.pi*dt)**2,0,0,0,0],
+            [0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0.],
+            [0,0,0,0,0,0,0.],
         ])
 
  
@@ -367,23 +362,32 @@ class Model:
         self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2])*dt
         self.__x_p[2]=self.__x_c[2]+U[1]
 
-        self.__x_p[3]=self.__x_c[0]-self.__x_c[7]*t+U[0]*cos(self.__x_c[2])*dt
-        self.__x_p[4]=self.__x_c[1]-self.__x_c[8]*t+U[0]*sin(self.__x_c[2])*dt
+        self.__x_p[3]=self.__x_c[0]-self.__x_c[5]*t+U[0]*cos(self.__x_c[2])*dt
+        self.__x_p[4]=self.__x_c[1]-self.__x_c[6]*t+U[0]*sin(self.__x_c[2])*dt
 
-        self.__x_p[5]=self.__x_c[5]+U[0]*cos(self.__x_c[2])*dt
-        self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2])*dt
-
-        
-        self.__x_p[7]=(self.__x_c[7]+(self.__x_c[0]-self.__x_c[5])/t)/2.
-        self.__x_p[8]=(self.__x_c[8]+(self.__x_c[1]-self.__x_c[6])/t)/2.
-
+        # self.__x_p[5]=self.__x_c[5]+U[0]*cos(self.__x_c[2])*dt
+        # self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2])*dt
+       
+        self.__x_p[5]=(self.__x_c[5]+(self.__x_c[0]-self.__x_c[3])/t)/2.
+        self.__x_p[6]=(self.__x_c[6]+(self.__x_c[1]-self.__x_c[4])/t)/2.
 
 
         self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
 
 
-    def Correction(self,Y,metka,D):
-
+    def Correction(self,Y,metka,D,t):
+        self.__H=np.asarray([
+            [0.,0,0,1,0,t,0],
+            [0,0.,0,0,1,0,t],
+            [0,0,1.,0,0,0,0],
+        ])
+        self.__H2=np.asarray([
+            [0.,0,0,1,0,t,0],
+            [0,0.,0,0,1,0,t],
+            [0,0,1.,0,0,0,0],
+            [0,0,0.,1,0,0,0],
+            [0,0,0.,0,1,0,0],
+        ])
 
         if metka=="bins":
             __H=self.__H
@@ -422,21 +426,21 @@ class Model:
         self.__x_p[2]=self.__wz
         self.__x_p[3]=self.__x_p[0]
         self.__x_p[4]=self.__x_p[1]
-        self.__x_p[5]=self.__x_p[0]
-        self.__x_p[6]=self.__x_p[1]
-        self.__x_p[7]=0
-        self.__x_p[8]=0
+        # self.__x_p[5]=self.__x_p[0]
+        # self.__x_p[6]=self.__x_p[1]
+        self.__x_p[5]=0
+        self.__x_p[6]=0
      
 
-        self.__p_p[0][0]=5
-        self.__p_p[1][1]=5
+        self.__p_p[0][0]=50
+        self.__p_p[1][1]=50
         self.__p_p[2][2]=1
-        self.__p_p[3][3]=5
-        self.__p_p[4][4]=5
-        self.__p_p[5][5]=5
-        self.__p_p[6][6]=5
-        self.__p_p[7][7]=50
-        self.__p_p[8][8]=50
+        self.__p_p[3][3]=50
+        self.__p_p[4][4]=50
+        # self.__p_p[5][5]=5
+        # self.__p_p[6][6]=5
+        self.__p_p[5][5]=50
+        self.__p_p[6][6]=50
    
         
         index=0
@@ -470,9 +474,9 @@ class Model:
                     y[4]=(__qry)
                     D_=min(D)
 
-            self.Correction(y,Data[1],D_)
-            self.Result.append([Data[0],self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4],self.__x_c[5],self.__x_c[6],self.__x_c[7],self.__x_c[8]])
-            self.P.append([Data[0],self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4],self.__p_c[5][5],self.__p_c[6][6],self.__p_c[7][7],self.__p_c[8][8]])         
+            self.Correction(y,Data[1],D_,Data[0])
+            self.Result.append([Data[0],self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4],self.__x_c[5],self.__x_c[6]])
+            self.P.append([Data[0],self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4],self.__p_c[5][5],self.__p_c[6][6]])         
 
             c,dwz,newDt=self.Control(dt,otherY[0],otherY[1],otherY[2],self.__x_c[3],self.__x_c[4],self.__x_c[2])
             U=np.asarray([c,dwz])
