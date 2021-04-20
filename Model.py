@@ -34,10 +34,10 @@ class Model:
         self.dw=90.*np.pi/180.
 
         #под задачу фильтрации
-        self.__p_p=np.zeros((7,7))
-        self.__p_c=np.zeros((7,7))
-        self.__x_c=np.zeros(7)
-        self.__x_p=np.zeros(7)
+        self.__p_p=np.zeros((5,5))
+        self.__p_c=np.zeros((5,5))
+        self.__x_c=np.zeros(5)
+        self.__x_p=np.zeros(5)
         self.__cT=0.
 
         #ошибки измерений
@@ -56,18 +56,18 @@ class Model:
         # ])
 
         #матрица наблюдения
-        self.__H=np.asarray([
-            [1.,0,0,0,0,0,0],
-            [0,1.,0,0,0,0,0],
-            [0,0,1.,0,0,0,0],
-        ])
-        self.__H2=np.asarray([
-            [1.,0,0,0,0,0,0],
-            [0,1.,0,0,0,0,0],
-            [0,0,1.,0,0,0,0],
-            [0,0,0.,1,0,0,0],
-            [0,0,0.,0,1,0,0],
-        ])
+        # self.__H=np.asarray([
+        #     [1.,0,0,0,0,0,0],
+        #     [0,1.,0,0,0,0,0],
+        #     [0,0,1.,0,0,0,0],
+        # ])
+        # self.__H2=np.asarray([
+        #     [1.,0,0,0,0,0,0],
+        #     [0,1.,0,0,0,0,0],
+        #     [0,0,1.,0,0,0,0],
+        #     [0,0,0.,1,0,0,0],
+        #     [0,0,0.,0,1,0,0],
+        # ])
 
         self.Y=[]
         self.Result=[]
@@ -103,7 +103,7 @@ class Model:
         if (d1>=30) and (d3>=30) and (d2>=30):
             alpha=atan2((position[1]-__y),(position[0]-__x))
             dwz1=alpha-__wz
-            if dwz1>self.dw*dt:
+            if dwz1>=self.dw*dt:
                 dwz=self.dw*dt
             if dwz1<self.dw*dt:
                 dwz=-self.dw*dt
@@ -335,41 +335,31 @@ class Model:
     def Prediction(self,U,dt,t,metka):
 
         F=np.asarray([
-                [1.,0.,0, 0., 0.,0.,0],
-                [0.,1.,0, 0.,0.,0.,0],
-                [0.,0.,1.,0.,0.,0.,0],
+                [1.,0.,0, 0.,0.],
+                [0.,1.,0, 0.,0.],
+                [0.,0.,1.,0.,0.],
             
-                [1.,0.,0.,0.,0., -t, 0.],
-                [0.,1.,0.,0.,0.,0., -t],
+                [0.,0.,0.,1.,0.],
+                [0.,0.,0.,0.,1.],
             
-                [0.5/t,0,0,-0.5/t,0., 0.5, 0],
-                [0.,0.5/t,0.,0,-0.5/t, 0., 0.5],
                 ],dtype=float)
 
     
         De=np.asarray([
-            [(15*dt)**2,0,0,0,0,0,0],
-            [0,(15*dt)**2,0,0,0,0,0],
-            [0,0,(0.5*np.pi*dt)**2,0,0,0,0],
-            [0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0.],
-            [0,0,0,0,0,0,0.],
+            [(15*dt)**2,0,0,0,0],
+            [0,(15*dt)**2,0,0,0],
+            [0,0,(0.5*np.pi*dt)**2,0,0],
+            [0,0,0,0,0],
+            [0,0,0,0,0],
         ])
 
  
         self.__x_p[0]=self.__x_c[0]+U[0]*cos(self.__x_c[2])*dt
         self.__x_p[1]=self.__x_c[1]+U[0]*sin(self.__x_c[2])*dt
         self.__x_p[2]=self.__x_c[2]+U[1]
-
-        self.__x_p[3]=self.__x_c[0]-self.__x_c[5]*t+U[0]*cos(self.__x_c[2])*dt
-        self.__x_p[4]=self.__x_c[1]-self.__x_c[6]*t+U[0]*sin(self.__x_c[2])*dt
-
-        # self.__x_p[5]=self.__x_c[5]+U[0]*cos(self.__x_c[2])*dt
-        # self.__x_p[6]=self.__x_c[6]+U[0]*sin(self.__x_c[2])*dt
        
-        self.__x_p[5]=(self.__x_c[5]+(self.__x_c[0]-self.__x_c[3])/t)/2.
-        self.__x_p[6]=(self.__x_c[6]+(self.__x_c[1]-self.__x_c[4])/t)/2.
+        self.__x_p[3]=self.__x_c[3]
+        self.__x_p[4]=self.__x_c[4]
 
 
         self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
@@ -377,19 +367,24 @@ class Model:
 
     def Correction(self,Y,metka,D,t):
         self.__H=np.asarray([
-            [0.,0,0,1,0,t,0],
-            [0,0.,0,0,1,0,t],
-            [0,0,1.,0,0,0,0],
+            [1.,0,0,t,0],
+            [0,1.,0,0,t],
+            [0,0,1.,0,0],
         ])
         self.__H2=np.asarray([
-            [0.,0,0,1,0,t,0],
-            [0,0.,0,0,1,0,t],
-            [0,0,1.,0,0,0,0],
-            [0,0,0.,1,0,0,0],
-            [0,0,0.,0,1,0,0],
+            [1.,0,0,t,0],
+            [0,1.,0,0,t],
+            [0,0,1.,0,0],
+            [1,0,0.,0,0],
+            [0,1,0.,0,0],
         ])
 
         if metka=="bins":
+            self.__Dn=np.asarray([
+            [0.01,0,0.],
+            [0,0.01,0.],
+            [0,0,0.0049],
+            ])
             __H=self.__H
             invDe=LA.inv(self.__Dn)
             H_t=np.transpose(self.__H)
@@ -399,7 +394,7 @@ class Model:
             [0,0.01,0,0,0],
             [0,0,0.0049,0,0],
             [0,0,0.,D,0],
-            [0.,0.,0.,0.,D]
+            [0.,0,0.,0.,D]
             ])
             __H=self.__H2
             invDe=LA.inv(self.__Dn2)
@@ -424,12 +419,12 @@ class Model:
         self.__x_p[0]=self.__initX
         self.__x_p[1]=self.__initY
         self.__x_p[2]=self.__wz
-        self.__x_p[3]=self.__x_p[0]
-        self.__x_p[4]=self.__x_p[1]
+        self.__x_p[3]=0
+        self.__x_p[4]=0
         # self.__x_p[5]=self.__x_p[0]
         # self.__x_p[6]=self.__x_p[1]
-        self.__x_p[5]=0
-        self.__x_p[6]=0
+        # self.__x_p[5]=0
+        # self.__x_p[6]=0
      
 
         self.__p_p[0][0]=50
@@ -439,8 +434,8 @@ class Model:
         self.__p_p[4][4]=50
         # self.__p_p[5][5]=5
         # self.__p_p[6][6]=5
-        self.__p_p[5][5]=50
-        self.__p_p[6][6]=50
+        # self.__p_p[5][5]=50
+        # self.__p_p[6][6]=50
    
         
         index=0
@@ -475,8 +470,8 @@ class Model:
                     D_=min(D)
 
             self.Correction(y,Data[1],D_,Data[0])
-            self.Result.append([Data[0],self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4],self.__x_c[5],self.__x_c[6]])
-            self.P.append([Data[0],self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4],self.__p_c[5][5],self.__p_c[6][6]])         
+            self.Result.append([Data[0],self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4]])
+            self.P.append([Data[0],self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4]])         
 
             c,dwz,newDt=self.Control(dt,otherY[0],otherY[1],otherY[2],self.__x_c[3],self.__x_c[4],self.__x_c[2])
             U=np.asarray([c,dwz])

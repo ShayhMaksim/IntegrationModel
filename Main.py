@@ -123,14 +123,14 @@ kyfk=[]
 qrxfk=[]
 qryfk=[]
 for j in model.Result:
-    xfk.append(j[1])
-    yfk.append(j[2])
-    rxfk.append(j[4])
-    ryfk.append(j[5])
+    rxfk.append(j[1])
+    ryfk.append(j[2])
+    # rxfk.append(j[4])
+    # ryfk.append(j[5])
     # qrxfk.append(j[6])
     # qryfk.append(j[7])
-    kxfk.append(j[6])
-    kyfk.append(j[7])
+    kxfk.append(j[4])
+    kyfk.append(j[5])
 
 p_x=[]
 p_y=[]
@@ -142,15 +142,15 @@ p_ky=[]
 p_qrx=[]
 p_qry=[]
 for p in model.P:
-    p_x.append(p[1])
-    p_y.append(p[2])
+    p_rx.append(p[1])
+    p_ry.append(p[2])
     p_a.append(p[3])
-    p_rx.append(p[4])   
-    p_ry.append(p[5])
+    p_kx.append(p[4])   
+    p_ky.append(p[5])
     # p_qrx.append(p[6])
     # p_qry.append(p[7])
-    p_kx.append(p[6])   
-    p_ky.append(p[7])    
+    # p_kx.append(p[6])   
+    # p_ky.append(p[7])    
 
 plt.figure(figsize=(24,12))
 plt.rc('axes', labelsize=30)
@@ -186,35 +186,35 @@ plt.savefig('Траектория движения X')
 
 
 
-plt.figure(figsize=(24,12))
-plt.rc('axes', labelsize=30)
-plt.rc('axes',titlesize=30)
-plt.rc('legend', fontsize=30)
-plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("Корелляционная трубка для компоненты X") # заголовок
-plt.xlabel("t, с.") # ось абсцисс
-plt.ylabel("x, см.") # ось ординат
-plt.grid()      # включение отображение сетки
-plt.plot(t, np.asarray(x)-np.asarray(xfk),'r',label="Ошибка")  # построение графика
-plt.plot(t, np.sqrt(p_x)*3,'b',label="Трубка сверху")  # построение графика
-plt.plot(t, -np.sqrt(np.asarray(p_x))*3,'b',label="Трубка снизу")  # построение графика
-plt.legend(loc=0)
-plt.savefig('Корелляционная трубка X')
+# plt.figure(figsize=(24,12))
+# plt.rc('axes', labelsize=30)
+# plt.rc('axes',titlesize=30)
+# plt.rc('legend', fontsize=30)
+# plt.tick_params(axis='both', which='major', labelsize=16)
+# plt.title("Корелляционная трубка для компоненты X") # заголовок
+# plt.xlabel("t, с.") # ось абсцисс
+# plt.ylabel("x, см.") # ось ординат
+# plt.grid()      # включение отображение сетки
+# plt.plot(t, np.asarray(x)-np.asarray(xfk),'r',label="Ошибка")  # построение графика
+# plt.plot(t, np.sqrt(p_x)*3,'b',label="Трубка сверху")  # построение графика
+# plt.plot(t, -np.sqrt(np.asarray(p_x))*3,'b',label="Трубка снизу")  # построение графика
+# plt.legend(loc=0)
+# plt.savefig('Корелляционная трубка X')
 
-plt.figure(figsize=(24,12))
-plt.rc('axes', labelsize=30)
-plt.rc('axes',titlesize=30)
-plt.rc('legend', fontsize=30)
-plt.tick_params(axis='both', which='major', labelsize=16)
-plt.title("Корелляционная трубка для компоненты Y") # заголовок
-plt.xlabel("t, с.") # ось абсцисс
-plt.ylabel("y, см.") # ось ординат
-plt.grid()      # включение отображение сетки
-plt.plot(t, np.asarray(y)-np.asarray(yfk),'r',label="Ошибка")  # построение графика
-plt.plot(t, np.sqrt(p_y)*3,'b',label="Трубка сверху")  # построение графика
-plt.plot(t, -np.sqrt(np.asarray(p_y))*3,'b',label="Трубка снизу")  # построение графика
-plt.legend(loc=0)
-plt.savefig('Корелляционная трубка Y')
+# plt.figure(figsize=(24,12))
+# plt.rc('axes', labelsize=30)
+# plt.rc('axes',titlesize=30)
+# plt.rc('legend', fontsize=30)
+# plt.tick_params(axis='both', which='major', labelsize=16)
+# plt.title("Корелляционная трубка для компоненты Y") # заголовок
+# plt.xlabel("t, с.") # ось абсцисс
+# plt.ylabel("y, см.") # ось ординат
+# plt.grid()      # включение отображение сетки
+# plt.plot(t, np.asarray(y)-np.asarray(yfk),'r',label="Ошибка")  # построение графика
+# plt.plot(t, np.sqrt(p_y)*3,'b',label="Трубка сверху")  # построение графика
+# plt.plot(t, -np.sqrt(np.asarray(p_y))*3,'b',label="Трубка снизу")  # построение графика
+# plt.legend(loc=0)
+# plt.savefig('Корелляционная трубка Y')
 
 
 plt.figure(figsize=(24,12))
