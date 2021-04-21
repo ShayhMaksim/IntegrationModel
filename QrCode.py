@@ -43,18 +43,15 @@ class QrCode:
         if abs(self.__w)==math.pi or abs(self.__w)==0:
             x0=(x-self.__x)/math.cos(self.__w)
             y0=(y-self.__y)/math.cos(self.__w)
-            arg=math.atan2(y0,x0)
-            d=(x0**2+y0**2)**0.5
-            return d,arg,self.__w
+
+            return x0,y0,self.__w
         elif abs(self.__w)==math.pi*0.5 or abs(self.__w)==math.pi*1.5:
             y0=(x-self.__x)/math.sin(self.__w)
             x0=(y-self.__y)/(-math.sin(self.__w))
-            arg=math.atan2(y0,x0)
-            d=(x0**2+y0**2)**0.5
-            return d,arg,self.__w
+
+            return x0,y0,self.__w
         else:
             y0=(y-self.__y)+math.tan(self.__w)*(x-self.__x)
             x0=((x-self.__x)-y0*math.sin(self.__w))/math.cos(self.__w)
-            arg=math.atan2(y0,x0)
-            d=(x0**2+y0**2)**0.5
-            return d,arg,self.__w
+
+            return x0,y0,self.__w

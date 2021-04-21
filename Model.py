@@ -166,6 +166,17 @@ class Model:
 
         #список измерений
         
+        self.__x_p[0]=self.__initX
+        self.__x_p[1]=self.__initY
+        self.__x_p[2]=self.__wz
+        self.__x_p[3]=0
+        self.__x_p[4]=0
+
+        self.__p_p[0][0]=50
+        self.__p_p[1][1]=50
+        self.__p_p[2][2]=1.5
+        self.__p_p[3][3]=50
+        self.__p_p[4][4]=50
         
         while(True):
             currentY=[]
@@ -278,31 +289,21 @@ class Model:
                 for qr in self.__qr:
                     x,y=qr.GetQrCoordinate(np.pi*30./180,self.__x,self.__y,room[0],room[1],room[2])
                     if (x!=-1) and (y!=-1):
-                        dQr,angle,qrw=qr.GetLocalCoordinate(self.__x,self.__y)
+                        x0,y0,qrw=qr.GetLocalCoordinate(self.__x,self.__y)
+                        angle=atan2(y0,x0)
+                        dQr=(x0**2+y0**2)**0.5
                         print(abs(cos(angle)/sin(angle)))
                         dX=np.random.normal(0,abs(cos(angle)/sin(angle))*(2**(dQr**(1./3)))**0.5)
                         dY=np.random.normal(0,abs(cos(angle)/sin(angle))*(2**(dQr**(1./3)))**0.5)
-                        __X=(dQr*cos(angle)+dX)*cos(qrw)+(dQr*sin(angle)+dY)*sin(qrw)+x
-                        __Y=-(dQr*cos(angle)+dX)*sin(qrw)+(dQr*sin(angle)+dY)*cos(qrw)+y
-
+                        # __X=(dQr*cos(angle)+dX)*cos(qrw)+(dQr*sin(angle)+dY)*sin(qrw)+x
+                        # __Y=-(dQr*cos(angle)+dX)*sin(qrw)+(dQr*sin(angle)+dY)*cos(qrw)+y
+                        __X=x0+dX
+                        __Y=y0+dY
                 
-                        # if (round(__X,3)==round(self.__x,3)) and (round(__Y,3)==round(self.__y,3)): 
-                        #     print("YES!")
 
-                        Detected.append([__X,__Y,dQr,angle])
-
-  
-            c,dwz,newDt=self.Control(dt,resultD1,resultD2,resultD3,self.__x,self.__y,self.__wz)
-            self.Move(dt,c,dwz)
+                        Detected.append([__X,__Y,qrw,x,y])
 
 
-            __qrx=0
-            __qry=0
-            metka=""
-            if len(Detected)!=0:
-                metka="qr"
-            else:
-                metka="bins"
 
             __x=self.__x+(t0*10)+np.random.normal(0,0.1)
             __y=self.__y+(t0*10)+np.random.normal(0,0.1)
@@ -312,18 +313,24 @@ class Model:
             __d2=resultD2
             __d3=resultD3
 
-            if metka=="qr":
-                currentY=np.asarray([__x,__y,__wz])
-                Data=np.asarray([__d1,__d2,__d3,Detected])                  
-                self.Y.append([t0,metka,currentY,Data])
-            else:
-                currentY=np.asarray([__x,__y,__wz])
-                Data=np.asarray([__d1,__d2,__d3,0])
-                self.Y.append([t0,metka,currentY,Data])
+            Y=[__x,__y,__wz]
+            Data=[__d1,__d2,__d3,Detected]
 
+            self.Correction(Y,Data[3],t0)
+            self.Result.append([t0,self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4]])
+            self.P.append([t0,self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4]])         
+
+            c,dwz,newDt=self.Control(dt,Data[0],Data[1],Data[2],self.__x_c[0],self.__x_c[1],self.__x_c[2])
+            self.Y.append([t0,0,Y,Data])
             self.RealData.append([t0,__x,__y,self.__wz,self.__x,self.__y,])
             
-             
+            self.Move(dt,c,dwz)
+            U=np.asarray([c,dwz])
+            self.Prediction(U,newDt)
+
+            
+            
+            
             t0=t0+newDt
             self.__cT+=newDt
             if t0>=10000: break
@@ -332,7 +339,7 @@ class Model:
                 break
 
 
-    def Prediction(self,U,dt,t,metka):
+    def Prediction(self,U,dt):
 
         F=np.asarray([
                 [1.,0.,0, 0.,0.],
@@ -346,8 +353,8 @@ class Model:
 
     
         De=np.asarray([
-            [(15*dt)**2,0,0,0,0],
-            [0,(15*dt)**2,0,0,0],
+            [0.15,0,0,0,0],
+            [0,0.15,0,0,0],
             [0,0,(0.5*np.pi*dt)**2,0,0],
             [0,0,0,0,0],
             [0,0,0,0,0],
@@ -365,21 +372,15 @@ class Model:
         self.__p_p=np.dot(np.dot(F,self.__p_c),np.transpose(F))+De
 
 
-    def Correction(self,Y,metka,D,t):
-        self.__H=np.asarray([
-            [1.,0,0,t,0],
-            [0,1.,0,0,t],
-            [0,0,1.,0,0],
-        ])
-        self.__H2=np.asarray([
-            [1.,0,0,t,0],
-            [0,1.,0,0,t],
-            [0,0,1.,0,0],
-            [1,0,0.,0,0],
-            [0,1,0.,0,0],
-        ])
+    def Correction(self,Y,Qr,t):
 
-        if metka=="bins":
+        if len(Qr)==0:
+            self.__H=np.asarray([
+            [1.,0,0,t,0],
+            [0,1.,0,0,t],
+            [0,0,1.,0,0],
+            ])
+
             self.__Dn=np.asarray([
             [0.01,0,0.],
             [0,0.01,0.],
@@ -388,14 +389,74 @@ class Model:
             __H=self.__H
             invDe=LA.inv(self.__Dn)
             H_t=np.transpose(self.__H)
-        elif metka=="qr":
-            self.__Dn2=np.asarray([
-            [0.01,0,0,0,0],
-            [0,0.01,0,0,0],
-            [0,0,0.0049,0,0],
-            [0,0,0.,D,0],
-            [0.,0,0.,0.,D]
-            ])
+        else:
+            if len(Qr)==1:
+                Y=np.resize(Y,5)
+                Y[3]=(Qr[0][0])*cos(Qr[0][2])+(Qr[0][1])*sin(Qr[0][2])+Qr[0][3]
+                Y[4]=-(Qr[0][0])*sin(Qr[0][2])+(Qr[0][1])*cos(Qr[0][2])+Qr[0][4]    
+
+                D1=(Qr[0][0]**2+Qr[0][1]**2)**0.5
+                A1=atan2(Qr[0][1],Qr[0][0])
+                C1=cos(A1)**2/sin(A1)**2
+                D1=C1*(2**(D1**(1./3)))    
+
+                self.__H2=np.asarray([
+                [1.,0,0,t,0],
+                [0,1.,0,0,t],
+                [0,0,1.,0,0],
+                [1,0,0.,0,0],
+                [0,1,0.,0,0],
+                ])    
+
+                self.__Dn2=np.asarray([
+                [0.01,0,0,0,0],
+                [0,0.01,0,0,0],
+                [0,0,0.0049,0,0],
+                [0,0,0.,D1,0],
+                [0.,0,0.,0.,D1]
+                ])
+
+            if len(Qr)==2:
+                Y=np.resize(Y,7)
+                #первый Qr-код
+                Y[3]=(Qr[0][0])*cos(Qr[0][2])+(Qr[0][1])*sin(Qr[0][2])+Qr[0][3]
+                Y[4]=-(Qr[0][0])*sin(Qr[0][2])+(Qr[0][1])*cos(Qr[0][2])+Qr[0][4]    
+
+                D1_=(Qr[0][0]**2+Qr[0][1]**2)**0.5
+                A1=atan2(Qr[0][1],Qr[0][0])
+                C1=cos(A1)**2/sin(A1)**2
+                D1=C1*(2**(D1_**(1./3))) 
+
+                #второй Qr-код 
+                Y[5]=(Qr[1][0])*cos(Qr[1][2])+(Qr[1][1])*sin(Qr[1][2])+Qr[1][3]
+                Y[6]=-(Qr[1][0])*sin(Qr[1][2])+(Qr[1][1])*cos(Qr[1][2])+Qr[1][4]    
+
+                D2_=(Qr[1][0]**2+Qr[1][1]**2)**0.5
+                A2=atan2(Qr[1][1],Qr[1][0])
+                C2=cos(A2)**2/sin(A2)**2
+                D2=C2*(2**(D2_**(1./3)))   
+
+                self.__H2=np.asarray([
+                [1.,0,0,t,0],
+                [0,1.,0,0,t],
+                [0,0,1.,0,0],
+                [1,0,0.,0,0],
+                [0,1,0.,0,0],
+                [1,0,0.,0,0],
+                [0,1,0.,0,0],
+                ])    
+
+                self.__Dn2=np.asarray([
+                [0.01,0,0,0,0,0,0],
+                [0,0.01,0,0,0,0,0],
+                [0,0,0.0049,0,0,0,0],
+                [0.,0.,0.,D1,0.,0.,0.],
+                [0.,0.,0.,0.,D1,0,0],
+                [0.,0,0.,0.,0,D2,0],
+                [0.,0,0.,0.,0,0,D2]
+                ])
+
+
             __H=self.__H2
             invDe=LA.inv(self.__Dn2)
             H_t=np.transpose(self.__H2)
@@ -448,34 +509,14 @@ class Model:
 
             y=Data[2]
             otherY=Data[3]           
-            D_=0
-            if otherY[3]!=0:
-                __qrx=0
-                __qry=0
-                D=[]
-                if len(otherY[3])!=0:
-                    for qr in otherY[3]:
-                        __qrx+=qr[0]
-                        __qry+=qr[1]
-                        d_=(qr[0]**2+qr[1]**2)**0.5
-                        al_=atan2(qr[1],qr[0])
-                        an=cos(al_)**2/sin(al_)**2
-                        D_l=an*(2**(d_**(1./3)))
-                        D.append(D_l)
-                    __qrx=__qrx/len(otherY[3])
-                    __qry=__qry/len(otherY[3])
-                    y=np.resize(y,5)
-                    y[3]=(__qrx)
-                    y[4]=(__qry)
-                    D_=min(D)
 
-            self.Correction(y,Data[1],D_,Data[0])
+            self.Correction(y,otherY[3],Data[0])
             self.Result.append([Data[0],self.__x_c[0],self.__x_c[1],self.__x_c[2],self.__x_c[3],self.__x_c[4]])
             self.P.append([Data[0],self.__p_c[0][0],self.__p_c[1][1],self.__p_c[2][2],self.__p_c[3][3],self.__p_c[4][4]])         
 
-            c,dwz,newDt=self.Control(dt,otherY[0],otherY[1],otherY[2],self.__x_c[3],self.__x_c[4],self.__x_c[2])
+            c,dwz,newDt=self.Control(dt,otherY[0],otherY[1],otherY[2],self.__x_c[0],self.__x_c[1],self.__x_c[2])
             U=np.asarray([c,dwz])
-            self.Prediction(U,newDt,Data[0]+dt,Data[1])
+            self.Prediction(U,newDt)
             
             
             

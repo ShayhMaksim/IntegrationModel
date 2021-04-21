@@ -53,7 +53,7 @@ model=Model(50,300,scene,room,door)
 model.AddQrCode(qrList)
 model.AddWalls(walls)
 model.Simulate(0.1)
-model.FilterKalman(0.1)
+#model.FilterKalman(0.1)
 graphicsView.show()
 
 
